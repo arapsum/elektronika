@@ -1,0 +1,10 @@
+packages:
+  - client
+  - server
+  - admin
+
+onlyBuiltDependencies:
+  - core-js
+  - esbuild
+  - msw
+  - sharp

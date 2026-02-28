@@ -1,0 +1,17 @@
+{
+	"name": "elektronika",
+	"private": true,
+	"scripts": {
+		"dev": "pnpm --parallel -r dev",
+		"dev:client": "pnpm --filter client dev",
+		"dev:server": "pnpm --fitler server dev",
+		"build": "pnpm -r build",
+		"install:all": "pnpm -r install",
+		"install:client": "pnpm --filter client install",
+		"install:server": "pnpm --filter server install",
+		"fmt": "pnpm -r fmt",
+		"fmt:check": "pnpm -r fmt:check",
+		"lint": "pnpm -r lint",
+		"lint:fix": "pnpm -r lint:fix"
+	}
+}
