@@ -13,9 +13,9 @@ import {Toaster} from "@/components/ui/sonner";
 		<meta name="generator" content={Astro.generator} />
 		<title>Elektronika</title>
 	</head>
-	<body>
+  <body>
     <slot />
-      <Toaster richColors position="top-right" client:only="react" />
+    <Toaster richColors position="top-right" client:only="react" />
 	</body>
 </html>
 

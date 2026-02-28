@@ -1,9 +1,20 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import ReactComponent from "@/components/react-component.tsx";
+import MainLayout from "@/layouts/MainLayout.astro";
+import {LargeBanner, SmallBanners, BigBanners} from "@/components/banners/index";
+import {BrowseByCategory} from "@/components/landing/by-category";
+import {BrowseByProducts} from "@/components/landing/by-product";
+import {DiscountedProducts} from "@/components/landing/by-discounts";
 
 ---
 
 <Layout>
-<ReactComponent />
+  <MainLayout>
+    <LargeBanner client:visible />
+    <SmallBanners client:visible />
+    <BrowseByCategory client:visible />
+    <BrowseByProducts client:visible />
+    <BigBanners client:visible />
+    <DiscountedProducts client:visible />
+  </MainLayout>
 </Layout>

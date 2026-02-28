@@ -1,0 +1,16 @@
+---
+import "@/styles/global.css";
+import Header from "@/components/headers/index";
+import Footer from "@/components/footer";
+---
+
+
+<main class="flex flex-col w-full h-svh">
+  <Header client:visible />
+
+  <main class="xl:w-360 max-w-[360] mx-auto grow">
+    <slot />
+  </main>
+
+  <Footer />
+</main>
