@@ -29,7 +29,7 @@ async function setAdminPolicy() {
       });
     }
 
-    await db.insert(rolesToPermissions).values(adminPolicy);
+    await db.insert(rolesToPermissions).values(adminPolicy).onConflictDoNothing();
 
     console.log("Succeessfully set admin policy");
   } catch (e) {

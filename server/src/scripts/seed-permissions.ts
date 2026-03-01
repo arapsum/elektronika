@@ -20,11 +20,21 @@ const corePermissions: PermissionInsertModel[] = [
   { name: "permission:update", description: "update permission details" },
   { name: "permission:delete", description: "delete permission" },
   { name: "permission:assign", description: "assign permissions to roles" },
+  // category table policy
+  { name: "category:read", description: "category permission" },
+  { name: "category:create", description: "create category" },
+  { name: "category:update", description: "update category details" },
+  { name: "category:delete", description: "delete category" },
+  // brand table policy
+  { name: "brand:read", description: "brand permission" },
+  { name: "brand:create", description: "create brand" },
+  { name: "brand:update", description: "update brand details" },
+  { name: "brand:delete", description: "delete brand" },
 ];
 
 async function seedCorePermissions(permissions: PermissionInsertModel[]) {
   try {
-    await db.insert(permission).values(permissions);
+    await db.insert(permission).values(permissions).onConflictDoNothing();
 
     console.log("Seeding core permissions succeeded!");
   } catch (e) {

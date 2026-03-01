@@ -60,10 +60,10 @@ router.post(
 
     return c.json(
       {
-        message: "Account created successfully!",
+        message: "Login success!",
         ...response,
       },
-      201,
+      200,
     );
   },
 );
