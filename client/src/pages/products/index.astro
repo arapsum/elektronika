@@ -1,0 +1,14 @@
+
+---
+export const prerender = false
+
+import Layout from "@/layouts/Layout.astro";
+import MainLayout from "@/layouts/MainLayout.astro";
+import ProductPage from "@/components/products/index";
+---
+
+<Layout>
+  <MainLayout>
+    <ProductPage client:visible  />
+  </MainLayout>
+</Layout>

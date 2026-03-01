@@ -7,6 +7,7 @@
     "jsxImportSource": "react",
     "allowImportingTsExtensions": true,
     "noEmit": true,
+    "types": ["astro/client"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
