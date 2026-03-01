@@ -1,11 +1,23 @@
 import db from "@/db/index.ts";
-import { category, type CategoryInsertModel } from "@/db/schema/categories.ts";
-import { brand, type BrandInsertModel } from "@/db/schema/brands.ts";
+import { attributeType, brand, category } from "@/db/schema/index.ts";
+import type {
+  CategoryInsertModel,
+  BrandInsertModel,
+  AttributeTypeInsertModel,
+} from "@/db/schema/index.ts";
 
 const coreCategories: CategoryInsertModel[] = [
   { name: "Electronics", slug: "electronics", icon: "FaMicroChip" },
   { name: "Computers", slug: "computers", icon: "FaComputer" },
   { name: "Phones", slug: "phones", icon: "BsPhone" },
+];
+
+const coreAttributes: AttributeTypeInsertModel[] = [
+  { name: "colour", description: "Primary colour of the product variant" },
+  { name: "storage", description: "Physical storage capacity" },
+  { name: "weight", description: "The total mass of the product" },
+  { name: "ram", description: "Installed RAM capacity" },
+  { name: "screen size", description: "Display size in inches" },
 ];
 
 const coreBrands: BrandInsertModel[] = [
@@ -38,7 +50,7 @@ const coreBrands: BrandInsertModel[] = [
 
 async function seedCoreCategories(categories: CategoryInsertModel[]) {
   try {
-    await db.insert(category).values(categories);
+    await db.insert(category).values(categories).onConflictDoNothing();
 
     console.log("Seeding core categories succeeded!");
   } catch (e) {
@@ -50,7 +62,7 @@ async function seedCoreCategories(categories: CategoryInsertModel[]) {
 
 async function seedCoreBrands(brands: BrandInsertModel[]) {
   try {
-    await db.insert(brand).values(brands);
+    await db.insert(brand).values(brands).onConflictDoNothing();
 
     console.log("Seeding core brands succeeded!");
   } catch (e) {
@@ -60,8 +72,24 @@ async function seedCoreBrands(brands: BrandInsertModel[]) {
   }
 }
 
+async function seedCoreAttributeTypes(attributeTypes: AttributeTypeInsertModel[]) {
+  try {
+    await db.insert(attributeType).values(attributeTypes).onConflictDoNothing();
+
+    console.log("Seeding core attribute types succeeded!");
+  } catch (e) {
+    console.log("Error seeding core attribute types model: ", e);
+
+    throw e;
+  }
+}
+
 if (import.meta.filename) {
-  await Promise.all([seedCoreCategories(coreCategories), seedCoreBrands(coreBrands)]);
+  await Promise.all([
+    seedCoreCategories(coreCategories),
+    seedCoreBrands(coreBrands),
+    seedCoreAttributeTypes(coreAttributes),
+  ]);
 
   process.exit(0);
 }
