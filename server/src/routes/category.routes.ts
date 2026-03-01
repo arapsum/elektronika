@@ -2,7 +2,7 @@ import { createRouter } from "@/lib/app.ts";
 import * as categoryRespository from "@/db/respository/category.repository.ts";
 import { requireAuth, verifyPermissions } from "@/middlewares/auth.middleware.ts";
 import { zValidator } from "@hono/zod-validator";
-import { createCategorySchema } from "@/types/category.types.ts";
+import { CreateCategorySchema, UpdateCategorySchema } from "@/types/category.types.ts";
 import ValidationError from "@/errors/validation.error.ts";
 
 const app = createRouter();
@@ -23,7 +23,7 @@ app.post(
   "/",
   requireAuth,
   verifyPermissions({ permissions: "category:create" }),
-  zValidator("json", createCategorySchema, (result, _) => {
+  zValidator("json", CreateCategorySchema, (result, _) => {
     if (!result.success) {
       throw new ValidationError(result.error.issues);
     }
@@ -35,6 +35,26 @@ app.post(
     const created = await categoryRespository.createCategory(params, logger);
 
     return c.json(created, 201);
+  },
+);
+
+app.patch(
+  "/:id",
+  requireAuth,
+  verifyPermissions({ permissions: "category:update" }),
+  zValidator("json", UpdateCategorySchema, (result, _) => {
+    if (!result.success) {
+      throw new ValidationError(result.error.issues);
+    }
+  }),
+  async (c) => {
+    const id = c.req.param("id");
+    const values = c.req.valid("json");
+    const logger = c.get("logger");
+
+    const updated = await categoryRespository.updateCategoryById(id, values, logger);
+
+    return c.json(updated, 201);
   },
 );
 

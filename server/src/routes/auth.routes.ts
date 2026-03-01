@@ -4,9 +4,9 @@ import { auth } from "@/lib/auth.ts";
 import { SignInSchema, SignUpSchema } from "@/types/auth.types.ts";
 import { zValidator } from "@hono/zod-validator";
 
-const router = createRouter();
+const app = createRouter();
 
-router.post(
+app.post(
   "/sign-up/email",
   zValidator("json", SignUpSchema, (result, _) => {
     if (!result.success) {
@@ -37,7 +37,7 @@ router.post(
   },
 );
 
-router.post(
+app.post(
   "/sign-in/email",
   zValidator("json", SignInSchema, (result, _) => {
     if (!result.success) {
@@ -68,9 +68,9 @@ router.post(
   },
 );
 
-router.on(["POST", "GET"], "/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/*", (c) => auth.handler(c.req.raw));
 
 export default {
   path: "/auth",
-  handler: router,
+  handler: app,
 };

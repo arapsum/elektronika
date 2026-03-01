@@ -4,6 +4,7 @@ import { db } from "@/db/connection.ts";
 import { type PaginationQueryType } from "@/types/handler.types.ts";
 import { count, desc, eq, isNull } from "drizzle-orm";
 import { EntityNotFound } from "@/errors/entity.error.ts";
+import type { UpdateCategoryType } from "@/types/category.types.ts";
 
 async function createCategory(params: CategoryInsertModel, logger: PinoLogger) {
   try {
@@ -86,6 +87,44 @@ async function fetchCategoryById(id: string, logger: PinoLogger) {
   }
 }
 
+async function updateCategoryById(id: string, values: UpdateCategoryType, logger: PinoLogger) {
+  try {
+    const updates: Record<string, unknown> = {};
+
+    if (values.name) {
+      updates.name = values.name;
+    }
+
+    if (values.slug) {
+      updates.slug = values.slug;
+    }
+
+    if (values.description) {
+      updates.description = values.description;
+    }
+
+    if (values.parentId) {
+      updates.parentId = values.parentId;
+    }
+
+    if (values.icon) {
+      updates.icon = values.icon;
+    }
+
+    const result = await db.update(category).set(updates).where(eq(category.id, id)).returning();
+
+    return result[0];
+  } catch (e) {
+    logger.error({ error: e }, "Category updating failed");
+
+    if (e instanceof Error) {
+      throw new Error(`Failed to update category: ${e.message}`);
+    }
+
+    throw new Error("Failed to fetch update: Unkown error!");
+  }
+}
+
 export type FetchListCategoriesReturnType = Awaited<ReturnType<typeof fetchListCategories>>;
 
-export { createCategory, fetchListCategories, fetchCategoryById };
+export { createCategory, fetchListCategories, fetchCategoryById, updateCategoryById };
