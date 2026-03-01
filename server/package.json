@@ -15,7 +15,7 @@
 		"seed:admin": "tsx src/scripts/seed-admin.ts",
 		"seed:permissions": "tsx src/scripts/seed-permissions.ts",
 		"set:policy": "tsx src/scripts/set-policies.ts",
-		"seed:categories": "tsx src/scripts/seed-categories.ts"
+		"seed:models": "tsx src/scripts/seed-models.ts"
 	},
 	"dependencies": {
 		"@hono/node-server": "^1.19.9",
