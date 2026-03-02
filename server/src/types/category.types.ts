@@ -10,7 +10,10 @@ export const CreateCategorySchema = z.object({
     .string()
     .trim()
     .min(2, "Name requires 2 characters")
-    .max(100, { message: "Name must be under 100 characters" }),
+    .max(100, { message: "Name must be under 100 characters" })
+    .regex(/^[a-z0-9-]+$/, {
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    }),
   icon: z
     .string()
     .trim()
@@ -40,6 +43,9 @@ export const UpdateCategorySchema = z.object({
     .trim()
     .min(2, "Name requires 2 characters")
     .max(100, { message: "Name must be under 100 characters" })
+    .regex(/^[a-z0-9-]+$/, {
+      message: "Slug can only contain lowercase letters, numbers, and hyphens",
+    })
     .optional()
     .nullable(),
   icon: z

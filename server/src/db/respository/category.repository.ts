@@ -6,7 +6,7 @@ import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { EntityNotFound } from "@/errors/entity.error.ts";
 import type { UpdateCategoryType } from "@/types/category.types.ts";
 
-async function createCategory(params: CategoryInsertModel, logger: PinoLogger) {
+async function create(params: CategoryInsertModel, logger: PinoLogger) {
   try {
     const result = await db.insert(category).values(params).returning();
 
@@ -24,10 +24,10 @@ async function createCategory(params: CategoryInsertModel, logger: PinoLogger) {
   }
 }
 
-async function fetchListCategories(params: PaginationQueryType, logger: PinoLogger) {
+async function list(params: PaginationQueryType, logger: PinoLogger) {
   try {
     const page = Math.max(1, params.page || 1);
-    const limit = Math.min(50, Math.max(1, params.limit || 50));
+    const limit = Math.min(20, Math.max(1, params.limit || 50));
     const offset = (page - 1) * limit;
 
     const totalResult = await db
@@ -70,7 +70,7 @@ async function fetchListCategories(params: PaginationQueryType, logger: PinoLogg
   }
 }
 
-async function fetchCategoryById(id: string, logger: PinoLogger) {
+async function one(id: string, logger: PinoLogger) {
   try {
     const result = await db
       .select()
@@ -93,7 +93,7 @@ async function fetchCategoryById(id: string, logger: PinoLogger) {
   }
 }
 
-async function updateCategoryById(id: string, values: UpdateCategoryType, logger: PinoLogger) {
+async function update(id: string, values: UpdateCategoryType, logger: PinoLogger) {
   try {
     const updates: Record<string, unknown> = {};
 
@@ -131,7 +131,7 @@ async function updateCategoryById(id: string, values: UpdateCategoryType, logger
   }
 }
 
-async function deleteCategoryById(id: string, logger: PinoLogger) {
+async function remove(id: string, logger: PinoLogger) {
   try {
     let deletedAt = new Date();
     const result = await db
@@ -157,12 +157,6 @@ async function deleteCategoryById(id: string, logger: PinoLogger) {
   }
 }
 
-export type FetchListCategoriesReturnType = Awaited<ReturnType<typeof fetchListCategories>>;
+export type FetchListCategoriesReturnType = Awaited<ReturnType<typeof list>>;
 
-export {
-  createCategory,
-  fetchListCategories,
-  fetchCategoryById,
-  updateCategoryById,
-  deleteCategoryById,
-};
+export { create, list, one, update, remove };

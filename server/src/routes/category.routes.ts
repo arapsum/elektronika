@@ -11,7 +11,7 @@ app.get("/", async (c) => {
   const { page, limit } = c.req.query();
   const logger = c.get("logger");
 
-  const categories = await categoryRespository.fetchListCategories(
+  const categories = await categoryRespository.list(
     { page: Number(page), limit: Number(limit) },
     logger,
   );
@@ -32,7 +32,7 @@ app.post(
     const params = c.req.valid("json");
     const logger = c.get("logger");
 
-    const created = await categoryRespository.createCategory(params, logger);
+    const created = await categoryRespository.create(params, logger);
 
     return c.json(created, 201);
   },
@@ -52,7 +52,7 @@ app.patch(
     const values = c.req.valid("json");
     const logger = c.get("logger");
 
-    const updated = await categoryRespository.updateCategoryById(id, values, logger);
+    const updated = await categoryRespository.update(id, values, logger);
 
     return c.json(updated, 201);
   },
@@ -66,7 +66,7 @@ app.delete(
     const id = c.req.param("id");
     const logger = c.get("logger");
 
-    const deleted = await categoryRespository.deleteCategoryById(id, logger);
+    const deleted = await categoryRespository.remove(id, logger);
 
     return c.json(deleted, 200);
   },
@@ -76,7 +76,7 @@ app.get("/:id", async (c) => {
   const logger = c.get("logger");
   const id = c.req.param("id");
 
-  const category = await categoryRespository.fetchCategoryById(id, logger);
+  const category = await categoryRespository.one(id, logger);
 
   return c.json(category);
 });
