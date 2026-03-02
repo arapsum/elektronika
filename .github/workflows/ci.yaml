@@ -130,7 +130,7 @@ jobs:
           key: node-modules-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Type-check client
-        run: pnpm --filter client exec astro check
+        run: pnpm --filter client run lint
 
   client-build:
     name: Client — Build
@@ -191,7 +191,7 @@ jobs:
           key: node-modules-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Type-check client
-        run: pnpm --filter admin exec tsc --noEmit
+        run: pnpm --filter admin run lint
 
   admin-build:
     name: Admin — Build
