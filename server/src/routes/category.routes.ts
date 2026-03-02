@@ -58,6 +58,20 @@ app.patch(
   },
 );
 
+app.delete(
+  "/:id",
+  requireAuth,
+  verifyPermissions({ permissions: "category:delete" }),
+  async (c) => {
+    const id = c.req.param("id");
+    const logger = c.get("logger");
+
+    const deleted = await categoryRespository.deleteCategoryById(id, logger);
+
+    return c.json(deleted, 200);
+  },
+);
+
 app.get("/:id", async (c) => {
   const logger = c.get("logger");
   const id = c.req.param("id");

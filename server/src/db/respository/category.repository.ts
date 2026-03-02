@@ -2,7 +2,7 @@ import type { PinoLogger } from "hono-pino";
 import { category, type CategoryInsertModel } from "@/db/schema/categories.ts";
 import { db } from "@/db/connection.ts";
 import { type PaginationQueryType } from "@/types/handler.types.ts";
-import { count, desc, eq, isNull } from "drizzle-orm";
+import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { EntityNotFound } from "@/errors/entity.error.ts";
 import type { UpdateCategoryType } from "@/types/category.types.ts";
 
@@ -30,7 +30,10 @@ async function fetchListCategories(params: PaginationQueryType, logger: PinoLogg
     const limit = Math.min(50, Math.max(1, params.limit || 50));
     const offset = (page - 1) * limit;
 
-    const totalResult = await db.select({ count: count() }).from(category);
+    const totalResult = await db
+      .select({ count: count() })
+      .from(category)
+      .where(isNull(category.deletedAt));
     const totalItems = Number(totalResult[0].count || 0);
 
     const result = await db
@@ -69,7 +72,10 @@ async function fetchListCategories(params: PaginationQueryType, logger: PinoLogg
 
 async function fetchCategoryById(id: string, logger: PinoLogger) {
   try {
-    const result = await db.select().from(category).where(eq(category.id, id));
+    const result = await db
+      .select()
+      .from(category)
+      .where(and(eq(category.id, id), isNull(category.deletedAt)));
 
     if (result.length === 0) {
       throw new EntityNotFound(`Category with ID ${id} not found`);
@@ -125,6 +131,38 @@ async function updateCategoryById(id: string, values: UpdateCategoryType, logger
   }
 }
 
+async function deleteCategoryById(id: string, logger: PinoLogger) {
+  try {
+    let deletedAt = new Date();
+    const result = await db
+      .update(category)
+      .set({ deletedAt })
+      .where(eq(category.id, id))
+      .returning();
+
+    logger.info(
+      { category: result[0].name, slug: result[0].slug },
+      `Category ${result[0].name} has been marked deleted at ${deletedAt}`,
+    );
+
+    return result[0];
+  } catch (e) {
+    logger.error({ error: e }, "Category updating failed");
+
+    if (e instanceof Error) {
+      throw new Error(`Failed to update category: ${e.message}`);
+    }
+
+    throw new Error("Failed to fetch update: Unkown error!");
+  }
+}
+
 export type FetchListCategoriesReturnType = Awaited<ReturnType<typeof fetchListCategories>>;
 
-export { createCategory, fetchListCategories, fetchCategoryById, updateCategoryById };
+export {
+  createCategory,
+  fetchListCategories,
+  fetchCategoryById,
+  updateCategoryById,
+  deleteCategoryById,
+};
