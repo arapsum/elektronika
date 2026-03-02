@@ -86,6 +86,9 @@ async function one(id: string, logger: PinoLogger) {
     logger.error({ error: e }, "Category fetching failed");
 
     if (e instanceof Error) {
+      if (e instanceof EntityNotFound) {
+        throw e;
+      }
       throw new Error(`Failed to fetch category: ${e.message}`);
     }
 

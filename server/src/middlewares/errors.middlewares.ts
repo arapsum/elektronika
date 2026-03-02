@@ -1,4 +1,5 @@
 import betterAuthErrorResponse from "@/errors/auth.error.ts";
+import { EntityNotFound } from "@/errors/entity.error.ts";
 import ValidationError from "@/errors/validation.error.ts";
 import { APIError } from "better-auth";
 import type { NotFoundHandler, ErrorHandler } from "hono";
@@ -31,6 +32,10 @@ export const errorHandler: ErrorHandler = (err, c) => {
 
   if (err instanceof ValidationError) {
     return c.json(err.responseBody(), 400);
+  }
+
+  if (err instanceof EntityNotFound) {
+    return c.json(err.responseBody(), 404);
   }
 
   if (err instanceof APIError) {
