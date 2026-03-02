@@ -50,6 +50,13 @@
       "when": 1772356518490,
       "tag": "0006_graceful_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772456120021,
+      "tag": "0007_tiny_sentinel",
+      "breakpoints": true
     }
   ]
 }

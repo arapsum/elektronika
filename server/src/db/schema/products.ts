@@ -56,8 +56,8 @@ export const productImage = pgTable("product_images", {
     .notNull()
     .references(() => productVariant.id, { onDelete: "cascade" }),
   imageUrl: text("image_url").notNull(),
-  altText: text().notNull(),
-  displayOrder: integer().notNull(),
+  altText: text("alt_text").notNull(),
+  displayOrder: integer("display_order").notNull(),
 });
 
 export const attributeType = pgTable("attribute_type", {
