@@ -13,6 +13,7 @@ export const ProductAttributeSchema = z.record(
 export type ProductAttributeType = z.infer<typeof ProductAttributeSchema>;
 
 export const ProductImageSchema = z.object({
+  id: z.undefined().optional(),
   imageUrl: z.url({ message: "Must be a valid URL" }),
   altText: z
     .string()
@@ -32,12 +33,7 @@ export const ProductImageSchema = z.object({
 export type ProductImageType = z.infer<typeof ProductImageSchema>;
 
 export const UpdateProductImageSchema = z.object({
-  id: z.coerce
-    .number()
-    .int({ message: "Image ID must be an integer" })
-    .positive({ message: "Image ID must be a positive number" })
-    .optional()
-    .nullable(),
+  id: z.string().max(32, { message: "Invalid image ID" }).optional().nullable(),
   imageUrl: z.url({ message: "Must be a valid URL" }).optional().nullable(),
   altText: z
     .string()
@@ -57,6 +53,50 @@ export const UpdateProductImageSchema = z.object({
     .optional()
     .nullable(),
 });
+
+export const UpsertProductImageSchema = z
+  .object({
+    id: z.string().max(32, { message: "Invalid image ID " }).optional(),
+    imageUrl: z.url({ message: "Must be a valid URL" }).optional().nullable(),
+    altText: z
+      .string()
+      .trim()
+      .min(3, {
+        message: "Alt text must be at least 3 characters for accessibility",
+      })
+      .max(255, { message: "Alt text must be under 255 characters" })
+      .optional(),
+    displayOrder: z.coerce
+      .number()
+      .int({
+        message: "Display order must be an integer",
+      })
+      .positive({ message: "Display order must be a positive integer" })
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.id) {
+      if (!data.imageUrl)
+        ctx.addIssue({
+          code: "custom",
+          message: "imageUrl is required when creating",
+        });
+
+      if (!data.altText)
+        ctx.addIssue({
+          code: "custom",
+          message: "altText is required when creating",
+        });
+
+      if (!data.displayOrder)
+        ctx.addIssue({
+          code: "custom",
+          message: "displayOrder is required when creating",
+        });
+    }
+  });
+
+export type UpsertProductImageType = z.infer<typeof UpdateProductImageSchema>;
 
 export type UpdateProductImageType = z.infer<typeof UpdateProductImageSchema>;
 
@@ -175,7 +215,7 @@ export const UpdateProductVariantSchema = z.object({
     .optional()
     .nullable(),
   images: z
-    .array(UpdateProductImageSchema)
+    .array(UpsertProductImageSchema)
     .max(10, { message: "Maximum 10 images allowed per variant" })
     .optional()
     .nullable(),

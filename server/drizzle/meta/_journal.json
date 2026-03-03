@@ -57,6 +57,13 @@
       "when": 1772456120021,
       "tag": "0007_tiny_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1772530443892,
+      "tag": "0008_amused_warbird",
+      "breakpoints": true
     }
   ]
 }
