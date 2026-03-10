@@ -1,7 +1,7 @@
 import { foreignKey, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 
-export const category = pgTable(
+export const categoryTable = pgTable(
   "categories",
   {
     id: text()
@@ -23,5 +23,5 @@ export const category = pgTable(
   (table) => [foreignKey({ columns: [table.parentId], foreignColumns: [table.id] })],
 );
 
-export type CategoryModel = typeof category.$inferSelect;
-export type CategoryInsertModel = typeof category.$inferInsert;
+export type CategoryModel = typeof categoryTable.$inferSelect;
+export type CategoryInsertModel = typeof categoryTable.$inferInsert;

@@ -1,4 +1,4 @@
-import { brand, type BrandInsertModel } from "@/db/schema/index.ts";
+import { brandTable, type BrandInsertModel } from "@/db/schema/index.ts";
 import { db } from "@/db/connection.ts";
 import type { PinoLogger } from "hono-pino";
 import type { PaginationQueryType } from "@/types/handler.types.ts";
@@ -7,7 +7,7 @@ import type { UpdateBrandType } from "@/types/brand.types.ts";
 
 async function create(values: BrandInsertModel, logger: PinoLogger) {
   try {
-    const result = await db.insert(brand).values(values).returning();
+    const result = await db.insert(brandTable).values(values).returning();
 
     return result[0];
   } catch (e) {
@@ -29,17 +29,17 @@ async function list(params: PaginationQueryType, logger: PinoLogger) {
 
     const totalResult = await db
       .select({ count: count() })
-      .from(brand)
-      .where(isNull(brand.deletedAt));
+      .from(brandTable)
+      .where(isNull(brandTable.deletedAt));
     const totalItems = Number(totalResult[0].count || 0);
 
     const result = await db
       .select()
-      .from(brand)
-      .where(isNull(brand.deletedAt))
+      .from(brandTable)
+      .where(isNull(brandTable.deletedAt))
       .limit(limit)
       .offset(offset)
-      .orderBy(desc(brand.createdAt));
+      .orderBy(desc(brandTable.createdAt));
 
     const totalPages = Math.ceil(totalItems / limit);
     const hasNext = totalPages > page;
@@ -69,8 +69,8 @@ async function one(id: string, logger: PinoLogger) {
   try {
     const result = await db
       .select()
-      .from(brand)
-      .where(and(eq(brand.id, id), isNull(brand.deletedAt)));
+      .from(brandTable)
+      .where(and(eq(brandTable.id, id), isNull(brandTable.deletedAt)));
 
     return result[0];
   } catch (e) {
@@ -104,7 +104,11 @@ async function update(id: string, values: UpdateBrandType, logger: PinoLogger) {
       updates.icon = values.logoUrl;
     }
 
-    const result = await db.update(brand).set(updates).where(eq(brand.id, id)).returning();
+    const result = await db
+      .update(brandTable)
+      .set(updates)
+      .where(eq(brandTable.id, id))
+      .returning();
 
     return result[0];
   } catch (e) {
@@ -121,7 +125,11 @@ async function update(id: string, values: UpdateBrandType, logger: PinoLogger) {
 async function remove(id: string, logger: PinoLogger) {
   try {
     let deletedAt = new Date();
-    const result = await db.update(brand).set({ deletedAt }).where(eq(brand.id, id)).returning();
+    const result = await db
+      .update(brandTable)
+      .set({ deletedAt })
+      .where(eq(brandTable.id, id))
+      .returning();
 
     logger.info(
       { brand: result[0].name, slug: result[0].slug },

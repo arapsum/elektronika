@@ -1,5 +1,5 @@
 import type { PinoLogger } from "hono-pino";
-import { category, type CategoryInsertModel } from "@/db/schema/categories.ts";
+import { categoryTable, type CategoryInsertModel } from "@/db/schema/categories.ts";
 import { db } from "@/db/connection.ts";
 import { type PaginationQueryType } from "@/types/handler.types.ts";
 import { and, count, desc, eq, isNull } from "drizzle-orm";
@@ -8,7 +8,7 @@ import type { UpdateCategoryType } from "@/types/category.types.ts";
 
 async function create(params: CategoryInsertModel, logger: PinoLogger) {
   try {
-    const result = await db.insert(category).values(params).returning();
+    const result = await db.insert(categoryTable).values(params).returning();
 
     logger.info({ result }, "Category creation result: ");
 
@@ -32,17 +32,17 @@ async function list(params: PaginationQueryType, logger: PinoLogger) {
 
     const totalResult = await db
       .select({ count: count() })
-      .from(category)
-      .where(isNull(category.deletedAt));
+      .from(categoryTable)
+      .where(isNull(categoryTable.deletedAt));
     const totalItems = Number(totalResult[0].count || 0);
 
     const result = await db
       .select()
-      .from(category)
-      .where(isNull(category.deletedAt))
+      .from(categoryTable)
+      .where(isNull(categoryTable.deletedAt))
       .limit(limit)
       .offset(offset)
-      .orderBy(desc(category.createdAt));
+      .orderBy(desc(categoryTable.createdAt));
 
     const totalPages = Math.ceil(totalItems / limit);
     const hasNext = page < totalPages;
@@ -74,8 +74,8 @@ async function one(id: string, logger: PinoLogger) {
   try {
     const result = await db
       .select()
-      .from(category)
-      .where(and(eq(category.id, id), isNull(category.deletedAt)));
+      .from(categoryTable)
+      .where(and(eq(categoryTable.id, id), isNull(categoryTable.deletedAt)));
 
     if (result.length === 0) {
       throw new EntityNotFound(`Category with ID ${id} not found`);
@@ -117,7 +117,11 @@ async function update(id: string, values: UpdateCategoryType, logger: PinoLogger
       updates.icon = values.icon;
     }
 
-    const result = await db.update(category).set(updates).where(eq(category.id, id)).returning();
+    const result = await db
+      .update(categoryTable)
+      .set(updates)
+      .where(eq(categoryTable.id, id))
+      .returning();
 
     return result[0];
   } catch (e) {
@@ -135,9 +139,9 @@ async function remove(id: string, logger: PinoLogger) {
   try {
     let deletedAt = new Date();
     const result = await db
-      .update(category)
+      .update(categoryTable)
       .set({ deletedAt })
-      .where(eq(category.id, id))
+      .where(eq(categoryTable.id, id))
       .returning();
 
     logger.info(

@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 
-export const brand = pgTable("brands", {
+export const brandTable = pgTable("brands", {
   id: text()
     .primaryKey()
     .notNull()
@@ -18,5 +18,5 @@ export const brand = pgTable("brands", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export type BrandModel = typeof brand.$inferSelect;
-export type BrandInsertModel = typeof brand.$inferInsert;
+export type BrandModel = typeof brandTable.$inferSelect;
+export type BrandInsertModel = typeof brandTable.$inferInsert;
