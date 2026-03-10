@@ -9,10 +9,19 @@ import {
   brandTable,
   categoryTable,
   type NewProduct,
+  type NewProductGallery,
+  type OptionAttributes,
 } from "@/db/schema/index.ts";
-import { type CreateProductType } from "@/types/products.types.ts";
+import type {
+  UpdateProductType,
+  CreateProductType,
+  UpdateProductGalleryType,
+  UpdateProductOptionType,
+  UpdateProductVariantType,
+} from "@/types/products.types.ts";
 import { count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { EntityNotFound } from "@/errors/entity.error.ts";
+import type { PgTransaction } from "drizzle-orm/pg-core";
 
 async function create(params: CreateProductType, logger: PinoLogger) {
   try {
@@ -20,13 +29,13 @@ async function create(params: CreateProductType, logger: PinoLogger) {
       const newProduct: NewProduct = {
         ...params,
       };
-      const [product] = await tx.insert(productTable).values(newProduct).returning();
+      const [product] = await tx
+        .insert(productTable)
+        .values(newProduct)
+        .returning();
 
       for (const image of params.images) {
-        await tx.insert(productGalleryTable).values({
-          productId: product.id,
-          ...image,
-        });
+        await addImage(tx, { productId: product.id, ...image }, logger);
       }
 
       for (const opt of params.options) {
@@ -39,7 +48,9 @@ async function create(params: CreateProductType, logger: PinoLogger) {
           ...opt,
         };
 
-        await tx.insert(productVariantTable).values({ optionId: option.id, ...newProductVariant });
+        await tx
+          .insert(productVariantTable)
+          .values({ optionId: option.id, ...newProductVariant });
       }
 
       return product;
@@ -54,6 +65,81 @@ async function create(params: CreateProductType, logger: PinoLogger) {
     }
 
     throw new Error("Failed to create product: Unkown error!");
+  }
+}
+
+async function update(
+  id: string,
+  params: UpdateProductType,
+  logger: PinoLogger,
+) {
+  const { ...coreFields } = params;
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      let product;
+
+      const hasCoreChanges = Object.keys(coreFields).length > 0;
+
+      if (hasCoreChanges) {
+        const [existing] = await tx
+          .select()
+          .from(productTable)
+          .where(eq(productTable.id, id))
+          .limit(1);
+
+        if (!existing) {
+          throw new EntityNotFound(`Product with id "${id}" not found`);
+        }
+
+        let updatedSpecs = existing.specifications;
+        if (coreFields.specifications) {
+          updatedSpecs = {
+            ...existing.specifications,
+            ...coreFields.specifications,
+          };
+        }
+
+        coreFields.specifications = updatedSpecs ? updatedSpecs : undefined;
+
+        const [updated] = await tx
+          .update(productTable)
+          .set(coreFields)
+          .where(eq(productTable.id, id))
+          .returning();
+
+        if (!updated) {
+          throw new EntityNotFound(`Product with id "${id}" not found`);
+        }
+
+        product = updated;
+      } else {
+        const [existing] = await tx
+          .select()
+          .from(productTable)
+          .where(eq(productTable.id, id))
+          .limit(1);
+
+        if (!existing) {
+          throw new EntityNotFound(`Product with id "${id}" not found`);
+        }
+
+        product = existing;
+      }
+
+      return product;
+    });
+
+    return result;
+  } catch (e) {
+    logger.error({ error: e }, "Failed to update product!");
+
+    if (e instanceof Error) {
+      if (e instanceof EntityNotFound) throw e;
+      throw new Error(`Failed to update product: ${e.message}`);
+    }
+
+    throw new Error("Failed to update product: Unknown error!");
   }
 }
 
@@ -104,7 +190,10 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
           )`.as("options"),
           })
           .from(productOptionsTable)
-          .leftJoin(productVariantTable, eq(productOptionsTable.id, productVariantTable.optionId))
+          .leftJoin(
+            productVariantTable,
+            eq(productOptionsTable.id, productVariantTable.optionId),
+          )
           .groupBy(productOptionsTable.productId),
       );
 
@@ -157,9 +246,18 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
         })
         .from(filteredProducts)
         .innerJoin(brandTable, eq(filteredProducts.brandId, brandTable.id))
-        .innerJoin(categoryTable, eq(filteredProducts.categoryId, categoryTable.id))
-        .leftJoin(optionsAggregate, eq(filteredProducts.id, optionsAggregate.productId))
-        .leftJoin(imagesAggregate, eq(filteredProducts.id, imagesAggregate.productId));
+        .innerJoin(
+          categoryTable,
+          eq(filteredProducts.categoryId, categoryTable.id),
+        )
+        .leftJoin(
+          optionsAggregate,
+          eq(filteredProducts.id, optionsAggregate.productId),
+        )
+        .leftJoin(
+          imagesAggregate,
+          eq(filteredProducts.id, imagesAggregate.productId),
+        );
 
       const products = [];
 
@@ -261,7 +359,10 @@ async function one(id: string, logger: PinoLogger) {
           )`.as("options"),
           })
           .from(productOptionsTable)
-          .leftJoin(productVariantTable, eq(productOptionsTable.id, productVariantTable.optionId))
+          .leftJoin(
+            productVariantTable,
+            eq(productOptionsTable.id, productVariantTable.optionId),
+          )
           .groupBy(productOptionsTable.productId),
       );
 
@@ -314,9 +415,18 @@ async function one(id: string, logger: PinoLogger) {
         })
         .from(filteredProducts)
         .innerJoin(brandTable, eq(filteredProducts.brandId, brandTable.id))
-        .innerJoin(categoryTable, eq(filteredProducts.categoryId, categoryTable.id))
-        .leftJoin(optionsAggregate, eq(filteredProducts.id, optionsAggregate.productId))
-        .leftJoin(imagesAggregate, eq(filteredProducts.id, imagesAggregate.productId));
+        .innerJoin(
+          categoryTable,
+          eq(filteredProducts.categoryId, categoryTable.id),
+        )
+        .leftJoin(
+          optionsAggregate,
+          eq(filteredProducts.id, optionsAggregate.productId),
+        )
+        .leftJoin(
+          imagesAggregate,
+          eq(filteredProducts.id, imagesAggregate.productId),
+        );
 
       if (!item) {
         throw new EntityNotFound(`Product with ID ${id} not found`);
@@ -371,4 +481,128 @@ async function one(id: string, logger: PinoLogger) {
   }
 }
 
-export { list, create, one };
+async function remove(id: string, logger: PinoLogger) {
+  try {
+    const result = await db
+      .update(productTable)
+      .set({
+        deletedAt: new Date(),
+      })
+      .where(eq(productTable.id, id))
+      .returning();
+
+    return result[0];
+  } catch (e) {
+    logger.error({ error: e }, "product updating failed");
+
+    if (e instanceof Error) {
+      throw new Error(`Failed to update product: ${e.message}`);
+    }
+
+    throw new Error("Failed to fetch update: Unkown error!");
+  }
+}
+
+async function addImage(
+  tx: PgTransaction<any, any, any>,
+  newImage: NewProductGallery,
+  logger: PinoLogger,
+) {
+  try {
+    await tx.insert(productGalleryTable).values(newImage);
+  } catch (e) {
+    logger.error({ error: e }, "Failed to add image!");
+    throw e;
+  }
+}
+
+async function updateImage(
+  tx: PgTransaction<any, any, any>,
+  id: string,
+  updateImage: UpdateProductGalleryType,
+  logger: PinoLogger,
+) {
+  const updates: Record<string, unknown> = {};
+
+  if (updateImage.productId) updates.productId = updateImage.productId;
+  if (updateImage.imageLink) updates.imageLink = updateImage.imageLink;
+  if (updateImage.altText) updates.altText = updateImage.altText;
+  if (updateImage.displayOrder) updates.displayOrder = updateImage.displayOrder;
+
+  try {
+    await tx
+      .update(productGalleryTable)
+      .set(updates)
+      .where(eq(productGalleryTable.id, id));
+  } catch (e) {
+    logger.error({ error: e }, "Failed to update image!");
+    throw e;
+  }
+}
+
+async function updateProductOption(
+  tx: PgTransaction<any, any, any>,
+  id: string,
+  updateOption: UpdateProductOptionType,
+  logger: PinoLogger,
+) {
+  try {
+    let updateAttributes: OptionAttributes | undefined;
+
+    const [existing] = await tx
+      .select()
+      .from(productOptionsTable)
+      .where(eq(productOptionsTable.id, id));
+
+    if (!existing) {
+      throw new EntityNotFound("Product option not found");
+    }
+
+    const existingAttributes = existing.attributes;
+
+    if (updateOption.attributes) {
+      updateAttributes = { ...existingAttributes, ...updateOption.attributes };
+    }
+
+    const updates: Record<string, unknown> = {};
+
+    if (updateOption.productId) updates.productId = updateOption.productId;
+    if (updateAttributes) updates.attributes = updateAttributes;
+
+    await tx
+      .update(productOptionsTable)
+      .set(updates)
+      .where(eq(productOptionsTable.id, id));
+  } catch (e) {
+    logger.error({ error: e }, "Failed to update product option!");
+    throw e;
+  }
+}
+
+async function updateProductVariant(
+  tx: PgTransaction<any, any, any>,
+  id: string,
+  updateVariant: UpdateProductVariantType,
+  logger: PinoLogger,
+) {
+  try {
+    const updates: Record<string, unknown> = {};
+
+    if (updateVariant.sku) updates.sku = updateVariant.sku;
+    if (updateVariant.price) updates.price = updateVariant.price;
+    if (updateVariant.quantity) updates.stock = updateVariant.quantity;
+    if (updateVariant.isBase) updates.isBase = updateVariant.isBase;
+    if (updateVariant.reorderThreshold)
+      updates.reorderThreshold = updateVariant.reorderThreshold;
+
+    await tx
+      .update(productVariantTable)
+      .set(updates)
+      .where(eq(productVariantTable.id, id));
+  } catch (e) {
+    logger.error({ error: e }, "Failed to update product variant!");
+    throw e;
+  }
+}
+
+export { list, remove, create, one };
