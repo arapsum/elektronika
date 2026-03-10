@@ -517,7 +517,10 @@ async function updateProductOption(
     const existingAttributes = existing.attributes;
 
     if (updateOption.attributes) {
-      updateAttributes = { ...existingAttributes, ...updateOption.attributes };
+      updateAttributes = {
+        ...existingAttributes,
+        ...updateOption.attributes,
+      };
     }
 
     const updates: Record<string, unknown> = {};

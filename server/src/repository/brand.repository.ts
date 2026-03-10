@@ -4,6 +4,7 @@ import type { PinoLogger } from "hono-pino";
 import type { PaginationQueryType } from "@/types/handler.types.ts";
 import { and, count, desc, eq, isNull } from "drizzle-orm";
 import type { UpdateBrandType } from "@/types/brand.types.ts";
+import { EntityNotFound } from "@/errors/entity.error.ts";
 
 async function create(values: BrandInsertModel, logger: PinoLogger) {
   try {
@@ -72,11 +73,18 @@ async function one(id: string, logger: PinoLogger) {
       .from(brandTable)
       .where(and(eq(brandTable.id, id), isNull(brandTable.deletedAt)));
 
+    if (result.length === 0) {
+      throw new EntityNotFound(`Product with ID ${id} not found`);
+    }
+
     return result[0];
   } catch (e) {
     logger.error({ error: e, id }, "Brand fetching failed");
 
     if (e instanceof Error) {
+      if (e instanceof EntityNotFound) {
+        throw e;
+      }
       throw new Error(`Failed to fetch brand: ${e.message}`);
     }
 
