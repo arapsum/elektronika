@@ -1,5 +1,5 @@
 import { createRouter } from "@/lib/app.ts";
-import * as categoryRespository from "@/db/respository/category.repository.ts";
+import * as categoryRespository from "@/repository/category.repository.ts";
 import { requireAuth, verifyPermissions } from "@/middlewares/auth.middleware.ts";
 import { zValidator } from "@hono/zod-validator";
 import { CreateCategorySchema, UpdateCategorySchema } from "@/types/category.types.ts";

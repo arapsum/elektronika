@@ -1,5 +1,5 @@
 import { createRouter } from "@/lib/app.ts";
-import * as brandRespository from "@/db/respository/brand.repository.ts";
+import * as brandRespository from "@/repository/brand.repository.ts";
 import { zValidator } from "@hono/zod-validator";
 import { requireAuth, verifyPermissions } from "@/middlewares/auth.middleware.ts";
 import { CreateBrandSchema, UpdateBrandSchema } from "@/types/brand.types.ts";

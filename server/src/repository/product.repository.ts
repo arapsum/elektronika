@@ -18,6 +18,7 @@ import type {
   UpdateProductGalleryType,
   UpdateProductOptionType,
   UpdateProductVariantType,
+  ProductVariantType,
 } from "@/types/products.types.ts";
 import { count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { EntityNotFound } from "@/errors/entity.error.ts";
@@ -29,28 +30,14 @@ async function create(params: CreateProductType, logger: PinoLogger) {
       const newProduct: NewProduct = {
         ...params,
       };
-      const [product] = await tx
-        .insert(productTable)
-        .values(newProduct)
-        .returning();
+      const [product] = await tx.insert(productTable).values(newProduct).returning();
 
       for (const image of params.images) {
         await addImage(tx, { productId: product.id, ...image }, logger);
       }
 
       for (const opt of params.options) {
-        const [option] = await tx
-          .insert(productOptionsTable)
-          .values({ productId: product.id, ...opt })
-          .returning();
-
-        const newProductVariant = {
-          ...opt,
-        };
-
-        await tx
-          .insert(productVariantTable)
-          .values({ optionId: option.id, ...newProductVariant });
+        await addProductVariant(tx, product.id, opt, logger);
       }
 
       return product;
@@ -68,11 +55,7 @@ async function create(params: CreateProductType, logger: PinoLogger) {
   }
 }
 
-async function update(
-  id: string,
-  params: UpdateProductType,
-  logger: PinoLogger,
-) {
+async function update(id: string, params: UpdateProductType, logger: PinoLogger) {
   const { ...coreFields } = params;
 
   try {
@@ -190,10 +173,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
           )`.as("options"),
           })
           .from(productOptionsTable)
-          .leftJoin(
-            productVariantTable,
-            eq(productOptionsTable.id, productVariantTable.optionId),
-          )
+          .leftJoin(productVariantTable, eq(productOptionsTable.id, productVariantTable.optionId))
           .groupBy(productOptionsTable.productId),
       );
 
@@ -246,18 +226,9 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
         })
         .from(filteredProducts)
         .innerJoin(brandTable, eq(filteredProducts.brandId, brandTable.id))
-        .innerJoin(
-          categoryTable,
-          eq(filteredProducts.categoryId, categoryTable.id),
-        )
-        .leftJoin(
-          optionsAggregate,
-          eq(filteredProducts.id, optionsAggregate.productId),
-        )
-        .leftJoin(
-          imagesAggregate,
-          eq(filteredProducts.id, imagesAggregate.productId),
-        );
+        .innerJoin(categoryTable, eq(filteredProducts.categoryId, categoryTable.id))
+        .leftJoin(optionsAggregate, eq(filteredProducts.id, optionsAggregate.productId))
+        .leftJoin(imagesAggregate, eq(filteredProducts.id, imagesAggregate.productId));
 
       const products = [];
 
@@ -359,10 +330,7 @@ async function one(id: string, logger: PinoLogger) {
           )`.as("options"),
           })
           .from(productOptionsTable)
-          .leftJoin(
-            productVariantTable,
-            eq(productOptionsTable.id, productVariantTable.optionId),
-          )
+          .leftJoin(productVariantTable, eq(productOptionsTable.id, productVariantTable.optionId))
           .groupBy(productOptionsTable.productId),
       );
 
@@ -415,18 +383,9 @@ async function one(id: string, logger: PinoLogger) {
         })
         .from(filteredProducts)
         .innerJoin(brandTable, eq(filteredProducts.brandId, brandTable.id))
-        .innerJoin(
-          categoryTable,
-          eq(filteredProducts.categoryId, categoryTable.id),
-        )
-        .leftJoin(
-          optionsAggregate,
-          eq(filteredProducts.id, optionsAggregate.productId),
-        )
-        .leftJoin(
-          imagesAggregate,
-          eq(filteredProducts.id, imagesAggregate.productId),
-        );
+        .innerJoin(categoryTable, eq(filteredProducts.categoryId, categoryTable.id))
+        .leftJoin(optionsAggregate, eq(filteredProducts.id, optionsAggregate.productId))
+        .leftJoin(imagesAggregate, eq(filteredProducts.id, imagesAggregate.productId));
 
       if (!item) {
         throw new EntityNotFound(`Product with ID ${id} not found`);
@@ -530,10 +489,7 @@ async function updateImage(
   if (updateImage.displayOrder) updates.displayOrder = updateImage.displayOrder;
 
   try {
-    await tx
-      .update(productGalleryTable)
-      .set(updates)
-      .where(eq(productGalleryTable.id, id));
+    await tx.update(productGalleryTable).set(updates).where(eq(productGalleryTable.id, id));
   } catch (e) {
     logger.error({ error: e }, "Failed to update image!");
     throw e;
@@ -569,12 +525,48 @@ async function updateProductOption(
     if (updateOption.productId) updates.productId = updateOption.productId;
     if (updateAttributes) updates.attributes = updateAttributes;
 
-    await tx
-      .update(productOptionsTable)
-      .set(updates)
-      .where(eq(productOptionsTable.id, id));
+    await tx.update(productOptionsTable).set(updates).where(eq(productOptionsTable.id, id));
   } catch (e) {
     logger.error({ error: e }, "Failed to update product option!");
+    throw e;
+  }
+}
+
+async function addProductVariant(
+  tx: PgTransaction<any, any, any>,
+  productId: string,
+  variant: ProductVariantType,
+  logger: PinoLogger,
+) {
+  try {
+    const { sku, price, quantity, isBase, reorderThreshold, attributes } = variant;
+
+    const [newOption] = await tx
+      .insert(productOptionsTable)
+      .values({
+        productId,
+        attributes,
+      })
+      .returning();
+
+    const [newVariant] = await tx
+      .insert(productVariantTable)
+      .values({
+        optionId: newOption.id,
+        sku,
+        price,
+        quantity,
+        isBase,
+        reorderThreshold,
+      })
+      .returning();
+
+    return {
+      ...newVariant,
+      attributes: newOption.attributes,
+    };
+  } catch (e) {
+    logger.error({ error: e }, "Failed to add product variant!");
     throw e;
   }
 }
@@ -592,17 +584,23 @@ async function updateProductVariant(
     if (updateVariant.price) updates.price = updateVariant.price;
     if (updateVariant.quantity) updates.stock = updateVariant.quantity;
     if (updateVariant.isBase) updates.isBase = updateVariant.isBase;
-    if (updateVariant.reorderThreshold)
-      updates.reorderThreshold = updateVariant.reorderThreshold;
+    if (updateVariant.reorderThreshold) updates.reorderThreshold = updateVariant.reorderThreshold;
 
-    await tx
-      .update(productVariantTable)
-      .set(updates)
-      .where(eq(productVariantTable.id, id));
+    await tx.update(productVariantTable).set(updates).where(eq(productVariantTable.id, id));
   } catch (e) {
     logger.error({ error: e }, "Failed to update product variant!");
     throw e;
   }
 }
 
-export { list, remove, create, one };
+export {
+  list,
+  remove,
+  create,
+  one,
+  updateImage,
+  addImage,
+  updateProductOption,
+  updateProductVariant,
+  update,
+};

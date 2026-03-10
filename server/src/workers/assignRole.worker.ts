@@ -1,4 +1,4 @@
-import { assignUserARole, fetchRoleByName } from "@/db/respository/roles.repository.ts";
+import { assignUserARole, fetchRoleByName } from "@/repository/roles.repository.ts";
 
 export const assignCustomerRoleWorker = (userId: string) => {
   queueMicrotask(async () => {

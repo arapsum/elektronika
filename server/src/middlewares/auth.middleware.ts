@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth.ts";
 import type { ErrorResponseType } from "@/types/error.types.ts";
 import { createMiddleware } from "hono/factory";
-import { findUserPermissions } from "@/db/respository/permissions.repository.ts";
+import { findUserPermissions } from "@/repository/permissions.repository.ts";
 import type { PinoLogger } from "hono-pino";
 
 export const requireAuth = createMiddleware(async (c, next) => {

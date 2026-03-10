@@ -13,13 +13,9 @@ export const ProductAttributeSchema = z.record(
 export type ProductAttributeType = z.infer<typeof ProductAttributeSchema>;
 
 export const ProductSpecificationSchema = z.record(
-  z
-    .string()
-    .trim()
-    .min(1, { message: "Specification group name cannot be empty" })
-    .max(100, {
-      message: "Specification group name must be under 100 characters",
-    }),
+  z.string().trim().min(1, { message: "Specification group name cannot be empty" }).max(100, {
+    message: "Specification group name must be under 100 characters",
+  }),
   z.record(
     z
       .string()
@@ -27,9 +23,7 @@ export const ProductSpecificationSchema = z.record(
       .min(1, { message: "Specification name cannot be empty" })
       .max(100, { message: "Specification name must be under 100 characters" }),
     z.object({
-      value: z
-        .union([z.string().trim(), z.number(), z.boolean()])
-        .transform(String),
+      value: z.union([z.string().trim(), z.number(), z.boolean()]).transform(String),
       isKeySpec: z.boolean().default(false).optional(),
       icon: z.string().optional(),
       derivedFromAttribute: z.string().optional(),
@@ -37,9 +31,7 @@ export const ProductSpecificationSchema = z.record(
   ),
 );
 
-export type ProductSpecificationType = z.infer<
-  typeof ProductSpecificationSchema
->;
+export type ProductSpecificationType = z.infer<typeof ProductSpecificationSchema>;
 
 export const ProductVariantSchema = z.object({
   sku: z
@@ -48,8 +40,7 @@ export const ProductVariantSchema = z.object({
     .min(3, { message: "SKU must be at least 3 characters long" })
     .max(100, { message: "SKU must be under 100 characters" })
     .regex(/^[A-Z0-9-_]+$/i, {
-      message:
-        "SKU can only contain letters, numbers, hyphens, and underscores",
+      message: "SKU can only contain letters, numbers, hyphens, and underscores",
     }),
   price: z
     .number()
@@ -72,13 +63,12 @@ export const ProductVariantSchema = z.object({
     })
     .nonnegative({ message: "Reorder threshold cannot be negative" })
     .default(0),
-  attributes: ProductAttributeSchema.refine(
-    (attrs) => Object.keys(attrs).length > 0,
-    {
-      message: "At least one attribute is required",
-    },
-  ),
+  attributes: ProductAttributeSchema.refine((attrs) => Object.keys(attrs).length > 0, {
+    message: "At least one attribute is required",
+  }),
 });
+
+export type ProductVariantType = z.infer<typeof ProductVariantSchema>;
 
 export const ProductImageSchema = z.object({
   id: z.undefined().optional(),
@@ -104,14 +94,14 @@ export const CreateProductSchema = z.object({
     .trim()
     .min(3, { message: "Name must be at least 3 characters long" })
     .max(100, { message: "Name must be under 100 characters" }),
-  slug: z
-    .string()
-    .trim()
-    .min(3, { message: "Slug must be at least 3 characters long" })
-    .max(100, { message: "Slug must be under 100 characters" })
-    .regex(/^[a-z0-9-]+$/, {
-      message: "Slug can only contain lowercase letters, numbers, and hyphens",
-    }),
+  // slug: z
+  //   .string()
+  //   .trim()
+  //   .min(3, { message: "Slug must be at least 3 characters long" })
+  //   .max(100, { message: "Slug must be under 100 characters" })
+  //   .regex(/^[a-z0-9-]+$/, {
+  //     message: "Slug can only contain lowercase letters, numbers, and hyphens",
+  //   }),
   description: z
     .string()
     .trim()
@@ -126,23 +116,15 @@ export const CreateProductSchema = z.object({
     .string()
     .min(1, { message: "Brand ID is required" })
     .max(32, { message: "Brand ID is invalid" }),
-  model: z
-    .string()
-    .trim()
-    .max(100, { message: "Model number should be under 100 characters" }),
+  model: z.string().trim().max(100, { message: "Model number should be under 100 characters" }),
   images: z
     .array(ProductImageSchema)
     .min(1, { message: "At least one product image is required" })
     .max(10, { message: "Maximum 10 images allowed per variant" }),
-  specifications: ProductSpecificationSchema.refine(
-    (specs) => Object.keys(specs).length > 0,
-    {
-      message: "Atleast provide one specification group",
-    },
-  ),
-  options: z
-    .array(ProductVariantSchema)
-    .min(1, { message: "Atleast one option is required" }),
+  specifications: ProductSpecificationSchema.refine((specs) => Object.keys(specs).length > 0, {
+    message: "Atleast provide one specification group",
+  }),
+  options: z.array(ProductVariantSchema).min(1, { message: "Atleast one option is required" }),
 });
 
 export type CreateProductType = z.infer<typeof CreateProductSchema>;
@@ -202,9 +184,7 @@ export const UpdateProductGallerySchema = z.object({
     .nullable(),
 });
 
-export type UpdateProductGalleryType = z.infer<
-  typeof UpdateProductGallerySchema
->;
+export type UpdateProductGalleryType = z.infer<typeof UpdateProductGallerySchema>;
 
 export const UpdateProductOptionSchema = z.object({
   productId: z.string().max(32, { message: "Invalid product ID" }).optional(),
@@ -220,8 +200,7 @@ export const UpdateProductVariantSchema = z.object({
     .min(3, { message: "SKU must be at least 3 characters long" })
     .max(100, { message: "SKU must be under 100 characters" })
     .regex(/^[A-Z0-9-_]+$/i, {
-      message:
-        "SKU can only contain letters, numbers, hyphens, and underscores",
+      message: "SKU can only contain letters, numbers, hyphens, and underscores",
     })
     .optional(),
   price: z
@@ -248,9 +227,7 @@ export const UpdateProductVariantSchema = z.object({
     .optional(),
 });
 
-export type UpdateProductVariantType = z.infer<
-  typeof UpdateProductVariantSchema
->;
+export type UpdateProductVariantType = z.infer<typeof UpdateProductVariantSchema>;
 
 export const UpdateProductSchema = z.object({
   name: z
@@ -258,15 +235,6 @@ export const UpdateProductSchema = z.object({
     .trim()
     .min(3, { message: "Name must be at least 3 characters long" })
     .max(100, { message: "Name must be under 100 characters" })
-    .optional(),
-  slug: z
-    .string()
-    .trim()
-    .min(3, { message: "Slug must be at least 3 characters long" })
-    .max(100, { message: "Slug must be under 100 characters" })
-    .regex(/^[a-z0-9-]+$/, {
-      message: "Slug can only contain lowercase letters, numbers, and hyphens",
-    })
     .optional(),
   description: z
     .string()
