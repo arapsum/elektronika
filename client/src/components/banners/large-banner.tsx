@@ -2,12 +2,14 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 
 const OutlineButton = () => (
-  <Button
-    variant="outline"
-    className="h-14 px-14 py-4 bg-inherit text-white border-[1.5px] border-white/40 rounded-sm transition-transform duration-300 gap-2"
-  >
-    <span className="font-medium leading-6">Shop Now</span>
-  </Button>
+  <a href="/products">
+    <Button
+      variant="outline"
+      className="h-14 px-14 py-4 bg-inherit text-white border-[1.5px] border-white/40 rounded-sm transition-transform duration-300 gap-2"
+    >
+      <span className="font-medium leading-6">Shop Now</span>
+    </Button>
+  </a>
 );
 
 export function LargeBannerMobile() {

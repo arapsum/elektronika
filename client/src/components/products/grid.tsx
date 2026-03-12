@@ -7,10 +7,26 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { products } from "@/data/products";
-import ProductCard from "./card";
+import ProductCard, { ProductCardSkeleton } from "./card";
+import { useQuery } from "@tanstack/react-query";
+import { fetchProducts } from "@/api/products";
+import { queryClient } from "@/store";
 
 export default function ProductGrid() {
+  const { data, isLoading, error, isError } = useQuery(
+    {
+      queryKey: ["products"],
+      queryFn: fetchProducts,
+    },
+    queryClient,
+  );
+
+  const products = data?.data;
+
+  if (isError) {
+    return <div>Error: {error?.message}</div>;
+  }
+
   return (
     <section className="space-y-10 ">
       <main className="space-y-6">
@@ -20,9 +36,18 @@ export default function ProductGrid() {
         </h3>
         {/* Grid */}
         <main className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {products.map((item) => (
-            <ProductCard key={item.name} {...item} />
-          ))}
+          {isLoading
+            ? Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)
+            : products?.map((item) => (
+                <ProductCard
+                  key={item.name}
+                  image={item.images[0].link}
+                  alt={item.images[0].alt}
+                  name={`${item.brandName} ${item.name}`}
+                  price={Number(item.options[0].price)}
+                  isWishlisted={false}
+                />
+              ))}
         </main>
       </main>
 

@@ -273,12 +273,14 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
 
       return {
         data: products,
-        totalItems,
-        page,
-        totalPages,
-        hasNext,
-        hasPrev,
-        limit,
+        pagination: {
+          totalItems,
+          page,
+          totalPages,
+          hasNext,
+          hasPrev,
+          limit,
+        },
       };
     });
 
