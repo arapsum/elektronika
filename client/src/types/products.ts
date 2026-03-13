@@ -20,6 +20,14 @@ type ProductOption = {
   attributes: Record<string, string>;
 };
 
+type CategoryTree = {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  slug: string;
+  depth: number;
+};
+
 type Product = {
   id: string;
   brandId: string;
@@ -32,6 +40,7 @@ type Product = {
   specifications?: ProductSpecification;
   images: ProductGallery[];
   options: ProductOption[];
+  categoryTree: CategoryTree[];
   createdAt: string;
   updatedAt: string;
 };
@@ -57,4 +66,5 @@ export type {
   ProductSpecification,
   ProductOption,
   SpecificationEntry,
+  CategoryTree,
 };
