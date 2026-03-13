@@ -2,23 +2,26 @@ import type { PaginationQueryType } from "@/types/handler.types.ts";
 import type { PinoLogger } from "hono-pino";
 import { db } from "@/db/connection.ts";
 import {
-  productOptionsTable,
+  attributeTable,
+  attributeValueTable,
   productTable,
   productVariantTable,
   productGalleryTable,
   brandTable,
   categoryTable,
-  type NewProduct,
-  type NewProductGallery,
-  type OptionAttributes,
+} from "@/db/schema/index.ts";
+import type {
+  NewProduct,
+  NewProductGallery,
+  NewAttribute,
+  NewAttributeValue,
+  NewProductVariant,
 } from "@/db/schema/index.ts";
 import type {
   UpdateProductType,
   CreateProductType,
   UpdateProductGalleryType,
-  UpdateProductOptionType,
   UpdateProductVariantType,
-  ProductVariantType,
 } from "@/types/products.types.ts";
 import { count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { EntityNotFound } from "@/errors/entity.error.ts";
@@ -32,15 +35,45 @@ async function create(params: CreateProductType, logger: PinoLogger) {
       };
       const [product] = await tx.insert(productTable).values(newProduct).returning();
 
+      const images = [];
+
       for (const image of params.images) {
-        await addImage(tx, { productId: product.id, ...image }, logger);
+        let img = await addImage(tx, { productId: product.id, ...image }, logger);
+
+        images.push(img);
       }
+
+      const options = [];
 
       for (const opt of params.options) {
-        await addProductVariant(tx, product.id, opt, logger);
+        const variant = await addProductVariant(tx, { ...opt, productId: product.id }, logger);
+
+        const attributes: Record<string, string> = {};
+
+        for (const [key, value] of Object.entries(opt.attributes)) {
+          const attribute = await addAttribute(
+            tx,
+            { categoryId: params.categoryId, name: key },
+            logger,
+          );
+
+          const attributeValue = await addAttributeValue(
+            tx,
+            { value, attributeId: attribute.id, variantId: variant.id },
+            logger,
+          );
+
+          attributes[attribute.name] = attributeValue.value;
+        }
+
+        options.push({ ...variant, attributes });
       }
 
-      return product;
+      return {
+        ...product,
+        images,
+        options,
+      };
     });
 
     return result;
@@ -159,22 +192,43 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
           .orderBy(productTable.createdAt),
       );
 
+      const attributesAggregate = tx.$with("attributes_aggregate").as(
+        tx
+          .select({
+            variantId: productVariantTable.id,
+            attributes: sql`
+            COALESCE(
+              JSONB_OBJECT_AGG(
+                ${attributeTable.name}, ${attributeValueTable.value}
+              )
+              FILTER (WHERE ${attributeTable.name} IS NOT NULL),
+              '{}'::JSONB
+            )
+          `.as("attributes"),
+          })
+          .from(productVariantTable)
+          .leftJoin(attributeValueTable, eq(productVariantTable.id, attributeValueTable.variantId))
+          .leftJoin(attributeTable, eq(attributeValueTable.attributeId, attributeTable.id))
+          .groupBy(productVariantTable.id),
+      );
+
       const optionsAggregate = tx.$with("options_aggregate").as(
         tx
           .select({
-            productId: productOptionsTable.productId,
-            options: sql`json_agg(
-              json_build_object(
-              'attributes', ${productOptionsTable.attributes},
-              'sku', ${productVariantTable.sku},
-              'price', ${productVariantTable.price},
-              'quantity', ${productVariantTable.quantity}
-              )
-          )`.as("options"),
+            productId: productVariantTable.productId,
+            options: sql`JSONB_AGG(
+			           JSONB_BUILD_OBJECT(
+                  'id', ${productVariantTable.id},
+			            'sku', ${productVariantTable.sku},
+			            'price', ${productVariantTable.price},
+			            'quantity', ${productVariantTable.quantity},
+			            'attributes', ${attributesAggregate.attributes}
+			           )
+			       )`.as("options"),
           })
-          .from(productOptionsTable)
-          .leftJoin(productVariantTable, eq(productOptionsTable.id, productVariantTable.optionId))
-          .groupBy(productOptionsTable.productId),
+          .from(productVariantTable)
+          .leftJoin(attributesAggregate, eq(productVariantTable.id, attributesAggregate.variantId))
+          .groupBy(productVariantTable.productId),
       );
 
       const imagesAggregate = tx.$with("images_aggregate").as(
@@ -203,7 +257,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
       );
 
       const items = await tx
-        .with(filteredProducts, optionsAggregate, imagesAggregate)
+        .with(filteredProducts, attributesAggregate, optionsAggregate, imagesAggregate)
         .select({
           id: filteredProducts.id,
 
@@ -318,22 +372,43 @@ async function one(id: string, logger: PinoLogger) {
           .orderBy(productTable.createdAt),
       );
 
+      const attributesAggregate = tx.$with("attributes_aggregate").as(
+        tx
+          .select({
+            variantId: productVariantTable.id,
+            attributes: sql`
+            COALESCE(
+              JSONB_OBJECT_AGG(
+                ${attributeTable.name}, ${attributeValueTable.value}
+              )
+              FILTER (WHERE ${attributeTable.name} IS NOT NULL),
+              '{}'::JSONB
+            )
+          `.as("attributes"),
+          })
+          .from(productVariantTable)
+          .leftJoin(attributeValueTable, eq(productVariantTable.id, attributeValueTable.variantId))
+          .leftJoin(attributeTable, eq(attributeValueTable.attributeId, attributeTable.id))
+          .groupBy(productVariantTable.id),
+      );
+
       const optionsAggregate = tx.$with("options_aggregate").as(
         tx
           .select({
-            productId: productOptionsTable.productId,
-            options: sql`json_agg(
-              json_build_object(
-              'attributes', ${productOptionsTable.attributes},
-              'sku', ${productVariantTable.sku},
-              'price', ${productVariantTable.price},
-              'quantity', ${productVariantTable.quantity}
-              )
-          )`.as("options"),
+            productId: productVariantTable.productId,
+            options: sql`JSONB_AGG(
+			           JSONB_BUILD_OBJECT(
+                  'id', ${productVariantTable.id},
+			            'sku', ${productVariantTable.sku},
+			            'price', ${productVariantTable.price},
+			            'quantity', ${productVariantTable.quantity},
+			            'attributes', ${attributesAggregate.attributes}
+			           )
+			       )`.as("options"),
           })
-          .from(productOptionsTable)
-          .leftJoin(productVariantTable, eq(productOptionsTable.id, productVariantTable.optionId))
-          .groupBy(productOptionsTable.productId),
+          .from(productVariantTable)
+          .leftJoin(attributesAggregate, eq(productVariantTable.id, attributesAggregate.variantId))
+          .groupBy(productVariantTable.productId),
       );
 
       const imagesAggregate = tx.$with("images_aggregate").as(
@@ -362,7 +437,7 @@ async function one(id: string, logger: PinoLogger) {
       );
 
       const [item] = await tx
-        .with(filteredProducts, optionsAggregate, imagesAggregate)
+        .with(filteredProducts, attributesAggregate, optionsAggregate, imagesAggregate)
         .select({
           id: filteredProducts.id,
 
@@ -498,80 +573,50 @@ async function updateImage(
   }
 }
 
-async function updateProductOption(
+async function addProductVariant(
   tx: PgTransaction<any, any, any>,
-  id: string,
-  updateOption: UpdateProductOptionType,
+  newVariant: NewProductVariant,
   logger: PinoLogger,
 ) {
   try {
-    let updateAttributes: OptionAttributes | undefined;
+    const [created] = await tx.insert(productVariantTable).values(newVariant).returning();
 
-    const [existing] = await tx
-      .select()
-      .from(productOptionsTable)
-      .where(eq(productOptionsTable.id, id));
-
-    if (!existing) {
-      throw new EntityNotFound("Product option not found");
-    }
-
-    const existingAttributes = existing.attributes;
-
-    if (updateOption.attributes) {
-      updateAttributes = {
-        ...existingAttributes,
-        ...updateOption.attributes,
-      };
-    }
-
-    const updates: Record<string, unknown> = {};
-
-    if (updateOption.productId) updates.productId = updateOption.productId;
-    if (updateAttributes) updates.attributes = updateAttributes;
-
-    await tx.update(productOptionsTable).set(updates).where(eq(productOptionsTable.id, id));
+    return created;
   } catch (e) {
-    logger.error({ error: e }, "Failed to update product option!");
+    logger.error({ error: e }, "Failed to add product variant!");
     throw e;
   }
 }
 
-async function addProductVariant(
+async function addAttribute(
   tx: PgTransaction<any, any, any>,
-  productId: string,
-  variant: ProductVariantType,
+  newAttribute: NewAttribute,
   logger: PinoLogger,
 ) {
   try {
-    const { sku, price, quantity, isBase, reorderThreshold, attributes } = variant;
+    const [createdAttribute] = await tx.insert(attributeTable).values(newAttribute).returning();
 
-    const [newOption] = await tx
-      .insert(productOptionsTable)
-      .values({
-        productId,
-        attributes,
-      })
-      .returning();
-
-    const [newVariant] = await tx
-      .insert(productVariantTable)
-      .values({
-        optionId: newOption.id,
-        sku,
-        price,
-        quantity,
-        isBase,
-        reorderThreshold,
-      })
-      .returning();
-
-    return {
-      ...newVariant,
-      attributes: newOption.attributes,
-    };
+    return createdAttribute;
   } catch (e) {
-    logger.error({ error: e }, "Failed to add product variant!");
+    logger.error({ error: e }, "Failed to create a category attribute!");
+    throw e;
+  }
+}
+
+async function addAttributeValue(
+  tx: PgTransaction<any, any, any>,
+  newAttributeValue: NewAttributeValue,
+  logger: PinoLogger,
+) {
+  try {
+    const [createdAttributeValue] = await tx
+      .insert(attributeValueTable)
+      .values(newAttributeValue)
+      .returning();
+
+    return createdAttributeValue;
+  } catch (e) {
+    logger.error({ error: e }, "Failed to add product attribute!");
     throw e;
   }
 }
@@ -598,14 +643,4 @@ async function updateProductVariant(
   }
 }
 
-export {
-  list,
-  remove,
-  create,
-  one,
-  updateImage,
-  addImage,
-  updateProductOption,
-  updateProductVariant,
-  update,
-};
+export { list, remove, create, one, updateImage, addImage, updateProductVariant, update };

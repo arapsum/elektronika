@@ -65,14 +65,14 @@ const coreBrands: BrandInsertModel[] = [
     logoUrl: "https://cdn.example.com/brands/google.png",
   },
   {
-    name: "Huawei",
-    slug: "huawei",
-    logoUrl: "https://cdn.example.com/brands/huawei.png",
+    name: "Dell",
+    slug: "dell",
+    logoUrl: "https://cdn.example.com/brands/dell.png",
   },
   {
-    name: "Xiaomi",
-    slug: "xiaomi",
-    logoUrl: "https://cdn.example.com/brands/xiaomi.png",
+    name: "Asus",
+    slug: "asus",
+    logoUrl: "https://cdn.example.com/brands/asus.png",
   },
 ];
 

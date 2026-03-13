@@ -1,1 +1,0 @@
-ALTER TABLE "product_variants" ADD COLUMN "reorder_threshold" integer DEFAULT 0 NOT NULL;

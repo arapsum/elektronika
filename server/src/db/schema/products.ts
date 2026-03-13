@@ -48,23 +48,48 @@ export const productTable = pgTable(
   (t) => [index().on(t.categoryId), index().on(t.brandId)],
 );
 
-export type OptionAttributes = Record<string, string>;
+export const attributeTable = pgTable(
+  "attributes",
+  {
+    id: varchar({ length: 255 })
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => createId()),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => categoryTable.id, { onDelete: "restrict" }),
+    name: varchar({ length: 255 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index().on(t.categoryId)],
+);
 
-export const productOptionsTable = pgTable("product_options", {
-  id: varchar({ length: 255 })
-    .primaryKey()
-    .notNull()
-    .$defaultFn(() => createId()),
-  productId: text("product_id")
-    .notNull()
-    .references(() => productTable.id, { onDelete: "restrict" }),
-  attributes: jsonb().$type<OptionAttributes>().notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at")
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const attributeValueTable = pgTable(
+  "attribute_values",
+  {
+    id: varchar({ length: 255 })
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => createId()),
+    variantId: text("variant_id")
+      .notNull()
+      .references(() => productVariantTable.id, { onDelete: "restrict" }),
+    attributeId: text("attribute_id")
+      .notNull()
+      .references(() => attributeTable.id, { onDelete: "restrict" }),
+    value: text().notNull(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "string" })
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date().toDateString()),
+  },
+  (t) => [index().on(t.attributeId), index().on(t.variantId)],
+);
 
 export const productVariantTable = pgTable(
   "product_variants",
@@ -73,9 +98,9 @@ export const productVariantTable = pgTable(
       .primaryKey()
       .notNull()
       .$defaultFn(() => createId()),
-    optionId: varchar("option_id", { length: 255 })
+    productId: varchar("product_id", { length: 255 })
       .notNull()
-      .references(() => productOptionsTable.id, { onDelete: "restrict" }),
+      .references(() => productTable.id, { onDelete: "restrict" }),
     sku: varchar({ length: 255 }).notNull(),
     price: decimal().notNull(),
     quantity: integer("stock_quantity").notNull().default(0),
@@ -87,7 +112,7 @@ export const productVariantTable = pgTable(
       .defaultNow()
       .$onUpdateFn(() => new Date().toDateString()),
   },
-  (t) => [index().on(t.optionId), index().on(t.sku)],
+  (t) => [index().on(t.productId), index().on(t.sku)],
 );
 
 export const productGalleryTable = pgTable(
@@ -109,9 +134,17 @@ export const productGalleryTable = pgTable(
 
 export type Product = typeof productTable.$inferSelect;
 export type NewProduct = typeof productTable.$inferInsert;
+
 export type ProductGallery = typeof productGalleryTable.$inferSelect;
 export type NewProductGallery = typeof productGalleryTable.$inferInsert;
-export type ProductOption = typeof productOptionsTable.$inferSelect;
-export type NewProductOption = typeof productOptionsTable.$inferInsert;
+
 export type ProductVariant = typeof productVariantTable.$inferSelect;
 export type NewProductVariant = typeof productVariantTable.$inferInsert;
+
+export type Attribute = typeof attributeTable.$inferSelect;
+export type NewAttribute = typeof attributeTable.$inferInsert;
+
+export type AttributeValue = typeof attributeValueTable.$inferSelect;
+export type NewAttributeValue = typeof attributeValueTable.$inferInsert;
+
+export type ProductAttributes = Record<string, string>;
