@@ -105,20 +105,29 @@ CREATE TABLE "roles_to_permissions" (
 	CONSTRAINT "roles_to_permissions_role_id_permission_id_pk" PRIMARY KEY("role_id","permission_id")
 );
 --> statement-breakpoint
+CREATE TABLE "attributes" (
+	"id" varchar(255) PRIMARY KEY NOT NULL,
+	"category_id" text NOT NULL,
+	"name" varchar(255) NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "attribute_values" (
+	"id" varchar(255) PRIMARY KEY NOT NULL,
+	"variant_id" text NOT NULL,
+	"attribute_id" text NOT NULL,
+	"value" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "product_gallery" (
 	"id" varchar PRIMARY KEY NOT NULL,
 	"product_id" varchar NOT NULL,
 	"image_link" text NOT NULL,
 	"display_order" integer NOT NULL,
-	"altText" text
-);
---> statement-breakpoint
-CREATE TABLE "product_options" (
-	"id" varchar(255) PRIMARY KEY NOT NULL,
-	"product_id" text NOT NULL,
-	"attributes" jsonb NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"alt_text" text
 );
 --> statement-breakpoint
 CREATE TABLE "products" (
@@ -126,23 +135,21 @@ CREATE TABLE "products" (
 	"category_id" text NOT NULL,
 	"brand_id" text NOT NULL,
 	"name" varchar(255) NOT NULL,
-	"slug" varchar(255) NOT NULL,
 	"model" varchar(255) NOT NULL,
 	"description" text,
 	"specifications" jsonb DEFAULT '{}'::jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"deleted_at" timestamp,
-	CONSTRAINT "products_name_unique" UNIQUE("name"),
-	CONSTRAINT "products_slug_unique" UNIQUE("slug")
+	"deleted_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE "product_variants" (
 	"id" varchar(255) PRIMARY KEY NOT NULL,
-	"option_id" varchar(255) NOT NULL,
+	"product_id" varchar(255) NOT NULL,
 	"sku" varchar(255) NOT NULL,
 	"price" numeric NOT NULL,
 	"stock_quantity" integer DEFAULT 0 NOT NULL,
+	"reorder_threshold" integer DEFAULT 0 NOT NULL,
 	"is_default" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -155,16 +162,21 @@ ALTER TABLE "user_to_roles" ADD CONSTRAINT "user_to_roles_user_id_user_id_fk" FO
 ALTER TABLE "user_to_roles" ADD CONSTRAINT "user_to_roles_role_id_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "roles_to_permissions" ADD CONSTRAINT "roles_to_permissions_role_id_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."roles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "roles_to_permissions" ADD CONSTRAINT "roles_to_permissions_permission_id_permissions_id_fk" FOREIGN KEY ("permission_id") REFERENCES "public"."permissions"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "attributes" ADD CONSTRAINT "attributes_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "attribute_values" ADD CONSTRAINT "attribute_values_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "public"."product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "attribute_values" ADD CONSTRAINT "attribute_values_attribute_id_attributes_id_fk" FOREIGN KEY ("attribute_id") REFERENCES "public"."attributes"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "product_gallery" ADD CONSTRAINT "product_gallery_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_options" ADD CONSTRAINT "product_options_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_brand_id_brands_id_fk" FOREIGN KEY ("brand_id") REFERENCES "public"."brands"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_variants" ADD CONSTRAINT "product_variants_option_id_product_options_id_fk" FOREIGN KEY ("option_id") REFERENCES "public"."product_options"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "product_variants" ADD CONSTRAINT "product_variants_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
+CREATE INDEX "attributes_category_id_index" ON "attributes" USING btree ("category_id");--> statement-breakpoint
+CREATE INDEX "attribute_values_attribute_id_index" ON "attribute_values" USING btree ("attribute_id");--> statement-breakpoint
+CREATE INDEX "attribute_values_variant_id_index" ON "attribute_values" USING btree ("variant_id");--> statement-breakpoint
 CREATE INDEX "product_gallery_product_id_index" ON "product_gallery" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX "products_category_id_index" ON "products" USING btree ("category_id");--> statement-breakpoint
 CREATE INDEX "products_brand_id_index" ON "products" USING btree ("brand_id");--> statement-breakpoint
-CREATE INDEX "product_variants_option_id_index" ON "product_variants" USING btree ("option_id");--> statement-breakpoint
+CREATE INDEX "product_variants_product_id_index" ON "product_variants" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX "product_variants_sku_index" ON "product_variants" USING btree ("sku");

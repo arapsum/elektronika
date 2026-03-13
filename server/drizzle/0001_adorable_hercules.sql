@@ -1,1 +1,0 @@
-ALTER TABLE "product_gallery" RENAME COLUMN "altText" TO "alt_text";
