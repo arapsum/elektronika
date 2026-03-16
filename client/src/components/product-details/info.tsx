@@ -7,6 +7,7 @@ import { HiOutlineBadgeCheck } from "react-icons/hi";
 import { IoCameraReverse } from "react-icons/io5";
 import { MdPhoneAndroid } from "react-icons/md";
 import { Button } from "@/components/ui/button";
+import type { CategoryAttributes, Product } from "@/types/products";
 
 const colours = [
   { name: "black", class: "bg-gray-900", ring: "ring-yellow-500" },
@@ -33,9 +34,22 @@ const services = [
   { name: "Guaranteed", icon: HiOutlineBadgeCheck, period: "1 year" },
 ];
 
-export function ProductInfo() {
+export function ProductInfo<T extends keyof CategoryAttributes>({
+  product,
+}: {
+  product: Product<T>;
+}) {
+  const options = product.options;
+
   const [selectedColour, setSelectedColour] = useState("purple");
   const [selectedStorage, setSelectedStorage] = useState("1TB");
+
+  const [selectedOption, setSelectedOption] = useState(options[0]);
+
+  const colourOptions = options.map((option) => {
+    return { name: option.attributes.colour, hex: option.attributes.colourHex };
+  });
+  const storageOptions = options.map((option) => option.attributes.storage);
 
   return (
     <section className="space-y-8 px-4 lg:px-0">
@@ -43,13 +57,16 @@ export function ProductInfo() {
       <main className="space-y-4">
         {/* Title */}
         <section className="space-y-6">
-          <h1 className="font-bold text-[40px] leading-10">Apple iPhone 14 Pro Max</h1>
+          <h1 className="font-bold text-[40px] leading-10">
+            {product.brandName} {product.name} -&nbsp;
+            {selectedOption.attributes.memory} RAM
+          </h1>
           <div className="flex items-center gap-4">
             <span className="font-medium text-[32px] leading-12 tracking-[0.03em] text-black">
               £1299
             </span>
             <span className="font-normal text-[#A0A0A0] text-2xl leading-8 tracking-[0.03em] line-through">
-              £1499
+              £{selectedOption.price}
             </span>
           </div>
         </section>
@@ -60,19 +77,20 @@ export function ProductInfo() {
           <div className="flex items-center gap-6">
             <span className="hidden font-normal text-base leading-6 ">Select colour:</span>
             <div className="flex items-center gap-4">
-              {colours.map((colour) => (
+              {colourOptions.map((colour) => (
                 <button
                   type="button"
                   onClick={() => setSelectedColour(colour.name)}
                   key={colour.name}
-                  className={`size-8 rounded-full ${colour.class} ring-2  transition-transform duration-300 ${selectedColour === colour.name ? colour.ring : "ring-transparent"}`}
+                  style={{ backgroundColor: colour.hex }}
+                  className={`size-8 rounded-full  ring-2 ring-transparent  transition-transform duration-300 ${selectedColour === colour.name ? "ring-black" : "ring-transparent"}`}
                 />
               ))}
             </div>
           </div>
 
           {/* Storage Tabs */}
-          <div className="flex items-center justify-between gap-2 lg:gap-4">
+          <div className="flex items-center gap-2 lg:gap-4">
             {storageOptions.map((item) => (
               <button
                 key={item}
@@ -103,7 +121,7 @@ export function ProductInfo() {
 
           {/* text description  */}
           <p className="font-normal text-sm leading-6 tracking-[0.03em] text-[#6C6C6C]">
-            Enhanced capabilities thanks toan enlarged display of 6.7 inchesand work without
+            Enhanced capabilities thanks to an enlarged display of 6.7 inchesand work without
             rechargingthroughout the day. Incredible photosas in weak, yesand in bright lightusing
             the new systemwith two cameras&nbsp;
             <span className="text-[#2c2c2c] underline">more...</span>

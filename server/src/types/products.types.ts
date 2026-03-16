@@ -17,11 +17,9 @@ export const ProductSpecificationSchema = z.record(
     message: "Specification group name must be under 100 characters",
   }),
   z.record(
-    z
-      .string()
-      .trim()
-      .min(1, { message: "Specification name cannot be empty" })
-      .max(100, { message: "Specification name must be under 100 characters" }),
+    z.string().trim().min(1, { message: "Specification name cannot be empty" }).max(100, {
+      message: "Specification name must be under 100 characters",
+    }),
     z.object({
       value: z.union([z.string().trim(), z.number(), z.boolean()]).transform(String),
       isKeySpec: z.boolean().default(false).optional(),
@@ -45,7 +43,9 @@ export const ProductVariantSchema = z.object({
   price: z
     .number()
     .positive({ message: "Price must be a positive number" })
-    .multipleOf(0.01, { message: "Price can only have up to 2 decimal places" })
+    .multipleOf(0.01, {
+      message: "Price can only have up to 2 decimal places",
+    })
     .max(9999999.99, { message: "Price exceeds maximum allowed value" })
     .transform(String),
   isBase: z.boolean().default(false),
@@ -102,6 +102,11 @@ export const CreateProductSchema = z.object({
   //   .regex(/^[a-z0-9-]+$/, {
   //     message: "Slug can only contain lowercase letters, numbers, and hyphens",
   //   }),
+  summary: z
+    .string()
+    .trim()
+    .min(250, { message: "Summary must be at least 250 characters long" })
+    .max(500, { message: "Summary must be under 500 characters" }),
   description: z
     .string()
     .trim()
@@ -206,7 +211,9 @@ export const UpdateProductVariantSchema = z.object({
   price: z
     .number()
     .positive({ message: "Price must be a positive number" })
-    .multipleOf(0.01, { message: "Price can only have up to 2 decimal places" })
+    .multipleOf(0.01, {
+      message: "Price can only have up to 2 decimal places",
+    })
     .max(9999999.99, { message: "Price exceeds maximum allowed value" })
     .transform(String)
     .optional(),
@@ -235,6 +242,12 @@ export const UpdateProductSchema = z.object({
     .trim()
     .min(3, { message: "Name must be at least 3 characters long" })
     .max(100, { message: "Name must be under 100 characters" })
+    .optional(),
+  summary: z
+    .string()
+    .trim()
+    .min(250, { message: "Summary must be at least 250 characters long" })
+    .max(500, { message: "Summary must be under 500 characters" })
     .optional(),
   description: z
     .string()

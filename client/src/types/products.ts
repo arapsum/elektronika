@@ -13,11 +13,23 @@ type ProductGallery = {
   order: number;
 };
 
-type ProductOption = {
+type LaptopAttributes = {
+  memory: string;
+  storage: string;
+  colour: string;
+  colourHex: string;
+};
+
+type CategoryAttributes = {
+  laptop: LaptopAttributes;
+};
+
+type ProductOption<c extends keyof CategoryAttributes> = {
+  id: string;
   sku: string;
   price: string;
   quantity: number;
-  attributes: Record<string, string>;
+  attributes: CategoryAttributes[c];
 };
 
 type CategoryTree = {
@@ -28,7 +40,7 @@ type CategoryTree = {
   depth: number;
 };
 
-type Product = {
+type Product<c extends keyof CategoryAttributes> = {
   id: string;
   brandId: string;
   brandName: string;
@@ -36,10 +48,11 @@ type Product = {
   categoryName: string;
   name: string;
   model: string;
+  summary: string;
   description?: string;
   specifications?: ProductSpecification;
   images: ProductGallery[];
-  options: ProductOption[];
+  options: ProductOption<c>[];
   categoryTree: CategoryTree[];
   createdAt: string;
   updatedAt: string;
@@ -54,8 +67,8 @@ type Pagination = {
   hasPrev: boolean;
 };
 
-type ProductListResponse = {
-  data: Product[];
+type ProductListResponse<c extends keyof CategoryAttributes> = {
+  data: Product<c>[];
   pagination: Pagination;
 };
 
@@ -67,4 +80,6 @@ export type {
   ProductOption,
   SpecificationEntry,
   CategoryTree,
+  CategoryAttributes,
+  LaptopAttributes,
 };

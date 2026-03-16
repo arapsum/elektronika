@@ -11,6 +11,7 @@ import ProductCard, { ProductCardSkeleton } from "./card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/api/products";
 import { queryClient } from "@/store";
+import type { Product } from "@/types/products";
 
 export default function ProductGrid() {
   const { data, isLoading, error, isError } = useQuery(
@@ -38,9 +39,10 @@ export default function ProductGrid() {
         <main className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {isLoading
             ? Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)
-            : products?.map((item) => (
+            : products?.map((item: Product<any>) => (
                 <ProductCard
                   key={item.name}
+                  id={item.id}
                   image={item.images[0].link}
                   alt={item.images[0].alt}
                   name={`${item.brandName} ${item.name}`}

@@ -36,6 +36,7 @@ export const productTable = pgTable(
       .references(() => brandTable.id, { onDelete: "restrict" }),
     name: varchar({ length: 255 }).notNull(),
     model: varchar({ length: 255 }).notNull(),
+    summary: text().notNull(),
     description: text(),
     specifications: jsonb().$type<ProductSpecification>().default({}),
     createdAt: timestamp("created_at").notNull().defaultNow(),

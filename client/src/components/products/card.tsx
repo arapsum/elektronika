@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {
+  id: string;
   name: string;
   image: string;
   alt: string;
@@ -11,7 +12,7 @@ interface Props {
   isWishlisted: boolean;
 }
 
-export default function ProductCard({ isWishlisted, image, alt, name, price }: Props) {
+export default function ProductCard({ id, isWishlisted, image, alt, name, price }: Props) {
   const [isInWhishlist, setIsInWishlist] = useState(isWishlisted);
   return (
     <div className="space-y-2 md:space-y-4 py-6 px-3 md:px-4 bg-[#F6F6F6] rounded-[9px] max-w-67 h-88 md:h-108 shadow-sm">
@@ -30,9 +31,11 @@ export default function ProductCard({ isWishlisted, image, alt, name, price }: P
       {/* Bottom section: Name, price & Button */}
       <div className="flex flex-col gap-4 md:gap-6 justify-between">
         <div className="space-y-4 flex items-center justify-center flex-col">
-          <p className="font-medium text-sm md:text-base text-center leading-6 text-black line-clamp-2">
-            {name}
-          </p>
+          <a href={`/products/${id}`}>
+            <p className="font-medium text-sm md:text-base text-center leading-6 text-black line-clamp-2">
+              {name}
+            </p>
+          </a>
           <p className="font-semibold leading-6 tracking-[0.03em] text-2xl">£{price}</p>
         </div>
 
