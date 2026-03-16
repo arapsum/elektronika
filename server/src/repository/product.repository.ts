@@ -30,9 +30,30 @@ import type { PgTransaction } from "drizzle-orm/pg-core";
 async function create(params: CreateProductType, logger: PinoLogger) {
   try {
     const result = await db.transaction(async (tx) => {
+      const [brandId] = await tx
+        .select({ id: brandTable.id })
+        .from(brandTable)
+        .where(eq(brandTable.id, params.brandId));
+
+      if (!brandId) {
+        throw new EntityNotFound(`Brand with ID ${params.brandId} not found`);
+      }
+
+      const [categoryId] = await tx
+        .select({ id: categoryTable.id })
+        .from(categoryTable)
+        .where(eq(categoryTable.id, params.categoryId));
+
+      if (!categoryId) {
+        throw new EntityNotFound(`Category with ID ${params.categoryId} not found`);
+      }
+
       const newProduct: NewProduct = {
         ...params,
+        brandId: brandId.id,
+        categoryId: categoryId.id,
       };
+
       const [product] = await tx.insert(productTable).values(newProduct).returning();
 
       const images = [];
@@ -59,7 +80,11 @@ async function create(params: CreateProductType, logger: PinoLogger) {
 
           const attributeValue = await addAttributeValue(
             tx,
-            { value, attributeId: attribute.id, variantId: variant.id },
+            {
+              value,
+              attributeId: attribute.id,
+              variantId: variant.id,
+            },
             logger,
           );
 
@@ -81,6 +106,7 @@ async function create(params: CreateProductType, logger: PinoLogger) {
     logger.error({ error: e }, "Failed to create new product!");
 
     if (e instanceof Error) {
+      if (e instanceof EntityNotFound) throw e;
       throw new Error(`Failed to create product: ${e.message}`);
     }
 
@@ -180,6 +206,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
             categoryId: productTable.categoryId,
             name: productTable.name,
             model: productTable.model,
+            summary: productTable.summary,
             description: productTable.description,
             specifications: productTable.specifications,
             createdAt: productTable.createdAt,
@@ -269,6 +296,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
 
           name: filteredProducts.name,
           model: filteredProducts.model,
+          summary: filteredProducts.summary,
           description: filteredProducts.description,
           specifications: filteredProducts.specifications,
           createdAt: filteredProducts.createdAt,
@@ -361,6 +389,7 @@ async function one(id: string, logger: PinoLogger) {
             categoryId: productTable.categoryId,
             name: productTable.name,
             model: productTable.model,
+            summary: productTable.summary,
             description: productTable.description,
             specifications: productTable.specifications,
             createdAt: productTable.createdAt,
@@ -449,6 +478,7 @@ async function one(id: string, logger: PinoLogger) {
 
           name: filteredProducts.name,
           model: filteredProducts.model,
+          summary: filteredProducts.summary,
           description: filteredProducts.description,
           specifications: filteredProducts.specifications,
           createdAt: filteredProducts.createdAt,

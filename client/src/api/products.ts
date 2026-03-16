@@ -1,5 +1,5 @@
 import { env } from "@/env";
-import type { ProductListResponse, Product } from "@/types/products";
+import type { ProductListResponse, Product } from "@/types/product.types";
 
 async function fetchProducts() {
   const response = await fetch(`${env.PUBLIC_BASE_URL}/products`);

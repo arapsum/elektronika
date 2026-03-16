@@ -1,20 +1,51 @@
 import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
+import { ProductDetailBreadcrumb } from "./breadcrumbs";
+import { ProductThumbnail } from "./images";
+import { ProductInfo } from "./info";
+import { RelatedProducts } from "./related-products";
+import { fetchProduct } from "@/api/products";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/store";
+import type { Product, ProductSpecification, SpecificationEntry } from "@/types/product.types";
 
-const screenDetails = [
-  { name: "Screen diagonal", value: '6.7"' },
-  { name: "Screen resolution", value: "2796x1290" },
-  { name: "Refresh rate", value: "120 Hz" },
-  { name: "Pixel density", value: "120 Hz" },
-  { name: "Screen type", value: "OLED" },
-];
+export default function ProductDetail({ id }: { id: string }) {
+  const { data, isLoading, isError, error } = useQuery(
+    {
+      queryKey: ["product", id],
+      queryFn: () => fetchProduct(id),
+    },
+    queryClient,
+  );
 
-const cpuDetails = [
-  { name: "Processing Unit", value: "A16 Bionic" },
-  { name: "Cores", value: "10" },
-];
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error: {error.message}</div>;
 
-export function ProductDetails() {
+  return (
+    <section className="py-8 space-y-9 mx-auto px-4 sm:px-6 md:px-8 lg:px-16 xl:px-40">
+      <div className="hidden lg:block">
+        <ProductDetailBreadcrumb />
+      </div>
+      <main className="flex flex-col gap-9 lg:gap-0">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-9 lg:gap-12 xl:py-8">
+          <ProductThumbnail />
+          <ProductInfo product={data!} />
+        </section>
+        <ProductDetails product={data!} />
+
+        {/* TODO: Create reviews component */}
+
+        <RelatedProducts />
+      </main>
+    </section>
+  );
+}
+
+export function ProductDetails({ product }: { product: Product<any> }) {
+  const specifications = product.specifications;
+
+  const specsKeys = Object.keys(specifications!);
+
   return (
     <section className="py-10 px-4 mx-auto bg-[#FAFAFA] rounded-lg">
       <main className="flex flex-col gap-8 bg-white px-6 py-12 rounded-lg">
@@ -25,56 +56,13 @@ export function ProductDetails() {
         {/* Description */}
         <div>
           <p className="font-medium leading-6 text-sm text-[#9D9D9D] text-justify">
-            Just as a book is judged by its cover, the first thing you notice when you pick up a
-            modern smartphone is the display. Nothing surprising, because advanced technologies
-            allow you to practically level the display frames and cutouts for the front camera and
-            speaker, leaving no room for bold design solutions. And how good that in such realities
-            Apple everything is fine with displays. Both critics and mass consumers always praise
-            the quality of the picture provided by the products of the Californian brand. And last
-            year's 6.7-inch Retina panels, which had ProMotion, caused real admiration for many.
+            {product.description}
           </p>
         </div>
         {/* Details */}
-        <div className="flex flex-col gap-10">
-          {/* Info 1 */}
-          <div className="flex flex-col gap-4">
-            <div>
-              <h5 className="font-medium leading-6 text-black text-[20px]">Screen</h5>
-            </div>
-            <div className="flex flex-col gap-6">
-              {screenDetails.map((details, index) => (
-                <div
-                  key={`idx-${index}-${details.name}`}
-                  className="flex justify-between items-center border-b border-dotted border-black/40"
-                >
-                  <span className="font-normal leading-6 text-gray-700 text-[16px]">
-                    {details.name}
-                  </span>
-                  <span className="leading-6 text-gray-700 text-[15px]">{details.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Info 2 */}
-          <div className="flex flex-col gap-4">
-            <div>
-              <h5 className="font-medium leading-6 text-black text-[20px]">CPU</h5>
-            </div>
-            <div className="flex flex-col gap-6">
-              {cpuDetails.map((details, index) => (
-                <div
-                  key={`${details.name}-idx-${index}`}
-                  className="flex justify-between items-center border-b border-dotted border-black/40"
-                >
-                  <span className="font-normal leading-6 text-gray-700 text-[16px]">
-                    {details.name}
-                  </span>
-                  <span className="leading-6 text-gray-700 text-[15px]">{details.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <section>
+          {specsKeys.length > 0 && <RenderSpecs specifications={specifications!} />}
+        </section>
 
         <div className="flex justify-center items-center">
           <Button
@@ -88,5 +76,32 @@ export function ProductDetails() {
         </div>
       </main>
     </section>
+  );
+}
+
+function RenderSpecs({ specifications }: { specifications: ProductSpecification }) {
+  const specsEntries = Object.entries(specifications);
+
+  return (
+    <div className="flex flex-col gap-10">
+      {specsEntries.map(([key, value]: [string, Record<string, SpecificationEntry>]) => (
+        <div className="flex flex-col gap-4">
+          <div>
+            <h5 className="font-medium leading-6 text-black text-[20px] capitalize">{key}</h5>
+          </div>
+          <div className="flex flex-col gap-6">
+            {Object.entries(value).map(([spec, entry], index) => (
+              <div
+                key={`idx-${index}-${spec}`}
+                className="flex justify-between items-center border-b border-dotted border-black/40"
+              >
+                <span className="font-normal leading-6 text-gray-700 text-[16px]">{spec}</span>
+                <span className="leading-6 text-gray-700 text-[15px]">{entry.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
