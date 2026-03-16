@@ -1,7 +1,7 @@
 import ValidationError from "@/errors/validation.error.ts";
 import { createRouter } from "@/lib/app.ts";
 import { auth } from "@/lib/auth.ts";
-import { SignInSchema, SignUpSchema } from "@/types/auth.types.ts";
+import { SignInSchema, SignUpSchema, type SignUpType } from "@/types/auth.types.ts";
 import { zValidator } from "@hono/zod-validator";
 
 const app = createRouter();
@@ -14,7 +14,7 @@ app.post(
     }
   }),
   async (c) => {
-    const parsed = c.req.valid("json");
+    const parsed: SignUpType = c.req.valid("json");
 
     const { response, headers } = await auth.api.signUpEmail({
       returnHeaders: true,
