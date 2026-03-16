@@ -7,20 +7,7 @@ import { RelatedProducts } from "./related-products";
 import { fetchProduct } from "@/api/products";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/store";
-import type { Product, ProductSpecification, SpecificationEntry } from "@/types/products";
-
-const screenDetails = [
-  { name: "Screen diagonal", value: '6.7"' },
-  { name: "Screen resolution", value: "2796x1290" },
-  { name: "Refresh rate", value: "120 Hz" },
-  { name: "Pixel density", value: "120 Hz" },
-  { name: "Screen type", value: "OLED" },
-];
-
-const cpuDetails = [
-  { name: "Processing Unit", value: "A16 Bionic" },
-  { name: "Cores", value: "10" },
-];
+import type { Product, ProductSpecification, SpecificationEntry } from "@/types/product.types";
 
 export default function ProductDetail({ id }: { id: string }) {
   const { data, isLoading, isError, error } = useQuery(

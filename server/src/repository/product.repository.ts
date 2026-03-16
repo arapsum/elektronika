@@ -206,6 +206,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
             categoryId: productTable.categoryId,
             name: productTable.name,
             model: productTable.model,
+            summary: productTable.summary,
             description: productTable.description,
             specifications: productTable.specifications,
             createdAt: productTable.createdAt,
@@ -295,6 +296,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
 
           name: filteredProducts.name,
           model: filteredProducts.model,
+          summary: filteredProducts.summary,
           description: filteredProducts.description,
           specifications: filteredProducts.specifications,
           createdAt: filteredProducts.createdAt,
@@ -387,6 +389,7 @@ async function one(id: string, logger: PinoLogger) {
             categoryId: productTable.categoryId,
             name: productTable.name,
             model: productTable.model,
+            summary: productTable.summary,
             description: productTable.description,
             specifications: productTable.specifications,
             createdAt: productTable.createdAt,
@@ -475,6 +478,7 @@ async function one(id: string, logger: PinoLogger) {
 
           name: filteredProducts.name,
           model: filteredProducts.model,
+          summary: filteredProducts.summary,
           description: filteredProducts.description,
           specifications: filteredProducts.specifications,
           createdAt: filteredProducts.createdAt,

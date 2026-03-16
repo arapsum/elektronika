@@ -17,7 +17,7 @@ type LaptopAttributes = {
   memory: string;
   storage: string;
   colour: string;
-  colourHex: string;
+  colourhex: string;
 };
 
 type CategoryAttributes = {

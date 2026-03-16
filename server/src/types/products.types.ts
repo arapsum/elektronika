@@ -122,6 +122,14 @@ export const CreateProductSchema = z.object({
     .min(1, { message: "Brand ID is required" })
     .max(32, { message: "Brand ID is invalid" }),
   model: z.string().trim().max(100, { message: "Model number should be under 100 characters" }),
+  year: z
+    .number()
+    .int()
+    .positive({ message: "Year must be a positive integer" })
+    .min(2010, { message: "Year must be at least 2010" })
+    .max(new Date().getFullYear(), {
+      message: "Year must not exceed the current year",
+    }),
   images: z
     .array(ProductImageSchema)
     .min(1, { message: "At least one product image is required" })

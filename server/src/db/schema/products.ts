@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
@@ -39,6 +40,7 @@ export const productTable = pgTable(
     summary: text().notNull(),
     description: text(),
     specifications: jsonb().$type<ProductSpecification>().default({}),
+    year: integer().notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -46,7 +48,7 @@ export const productTable = pgTable(
       .$onUpdate(() => new Date()),
     deletedAt: timestamp("deleted_at"),
   },
-  (t) => [index().on(t.categoryId), index().on(t.brandId)],
+  (t) => [index().on(t.categoryId), index().on(t.brandId), uniqueIndex().on(t.name, t.year)],
 );
 
 export const attributeTable = pgTable(

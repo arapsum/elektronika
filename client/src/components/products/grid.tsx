@@ -11,7 +11,7 @@ import ProductCard, { ProductCardSkeleton } from "./card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/api/products";
 import { queryClient } from "@/store";
-import type { Product } from "@/types/products";
+import type { Product } from "@/types/product.types";
 
 export default function ProductGrid() {
   const { data, isLoading, error, isError } = useQuery(
