@@ -1,11 +1,14 @@
-type SpecificationEntry = {
+type SpecificationEntry<T extends keyof CategoryAttributes> = {
   value: string;
   isKeySpec?: boolean;
   icon?: string;
-  deriveFromAttribute?: string;
+  derivedFromAttribute?: keyof CategoryAttributes[T];
 };
 
-type ProductSpecification = Record<string, Record<string, SpecificationEntry>>;
+type ProductSpecification<T extends keyof CategoryAttributes> = Record<
+  string,
+  Record<string, SpecificationEntry<T>>
+>;
 
 type ProductGallery = {
   link: string;
@@ -24,12 +27,12 @@ type CategoryAttributes = {
   laptop: LaptopAttributes;
 };
 
-type ProductOption<c extends keyof CategoryAttributes> = {
+type ProductOption<C extends keyof CategoryAttributes> = {
   id: string;
   sku: string;
   price: string;
   quantity: number;
-  attributes: CategoryAttributes[c];
+  attributes: CategoryAttributes[C];
 };
 
 type CategoryTree = {
@@ -40,7 +43,7 @@ type CategoryTree = {
   depth: number;
 };
 
-type Product<c extends keyof CategoryAttributes> = {
+type Product<C extends keyof CategoryAttributes> = {
   id: string;
   brandId: string;
   brandName: string;
@@ -50,9 +53,9 @@ type Product<c extends keyof CategoryAttributes> = {
   model: string;
   summary: string;
   description?: string;
-  specifications?: ProductSpecification;
+  specifications?: ProductSpecification<C>;
   images: ProductGallery[];
-  options: ProductOption<c>[];
+  options: ProductOption<C>[];
   categoryTree: CategoryTree[];
   createdAt: string;
   updatedAt: string;
