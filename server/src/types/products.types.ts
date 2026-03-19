@@ -63,6 +63,13 @@ export const ProductVariantSchema = z.object({
     })
     .nonnegative({ message: "Reorder threshold cannot be negative" })
     .default(0),
+  discount: z
+    .number()
+    .positive({ message: "Discount must be a positive number" })
+    .multipleOf(0.01, {
+      message: "Discount can only have up to 2 decimal places",
+    })
+    .optional(),
   attributes: ProductAttributeSchema.refine((attrs) => Object.keys(attrs).length > 0, {
     message: "At least one attribute is required",
   }),

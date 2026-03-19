@@ -1,3 +1,5 @@
+import { Decimal } from "decimal.js";
+
 type SpecificationEntry<T extends keyof CategoryAttributes> = {
   value: string;
   isKeySpec?: boolean;
@@ -30,8 +32,9 @@ type CategoryAttributes = {
 type ProductOption<C extends keyof CategoryAttributes> = {
   id: string;
   sku: string;
-  price: string;
+  price: Decimal;
   quantity: number;
+  discount: number;
   attributes: CategoryAttributes[C];
 };
 

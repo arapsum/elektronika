@@ -249,6 +249,7 @@ async function list(query: PaginationQueryType, logger: PinoLogger) {
 			            'sku', ${productVariantTable.sku},
 			            'price', ${productVariantTable.price},
 			            'quantity', ${productVariantTable.quantity},
+									'discount', ${productVariantTable.discount},
 			            'attributes', ${attributesAggregate.attributes}
 			           )
 			       )`.as("options"),
@@ -431,6 +432,7 @@ async function one(id: string, logger: PinoLogger) {
 			            'sku', ${productVariantTable.sku},
 			            'price', ${productVariantTable.price},
 			            'quantity', ${productVariantTable.quantity},
+									'discount', ${productVariantTable.discount},
 			            'attributes', ${attributesAggregate.attributes}
 			           )
 			       )`.as("options"),

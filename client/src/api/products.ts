@@ -1,15 +1,19 @@
 import { env } from "@/env";
-import type { ProductListResponse, Product } from "@/types/product.types";
 
 async function fetchProducts() {
   const response = await fetch(`${env.PUBLIC_BASE_URL}/products`);
-  const data = (await response.json()) as ProductListResponse;
+  if (!response.ok) {
+    const errorResponse = await response.json();
+    console.error(errorResponse);
+    throw new Error(errorResponse.message || "Failed to fetch products");
+  }
+  const data = await response.json();
   return data;
 }
 
 async function fetchProduct(id: string) {
   const response = await fetch(`${env.PUBLIC_BASE_URL}/products/${id}`);
-  const data = (await response.json()) as Product;
+  const data = await response.json();
   return data;
 }
 

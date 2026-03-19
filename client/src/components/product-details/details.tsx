@@ -146,11 +146,15 @@ function ProductDetails<T extends keyof CategoryAttributes>({ id }: { id: string
                 </h1>
                 <div className="flex items-center gap-4">
                   <span className="font-medium text-[32px] leading-12 tracking-[0.03em] text-black">
-                    £1299
+                    {selectedOption.discount > 0
+                      ? `£${selectedOption.price - selectedOption.price * (selectedOption.discount / 100)}`
+                      : `£${selectedOption.price}`}
                   </span>
-                  <span className="font-normal text-[#A0A0A0] text-2xl leading-8 tracking-[0.03em] line-through">
-                    £{selectedOption.price}
-                  </span>
+                  {selectedOption.discount > 0 && (
+                    <span className="font-normal text-[#A0A0A0] text-2xl leading-8 tracking-[0.03em] line-through">
+                      £{selectedOption.price}
+                    </span>
+                  )}
                 </div>
               </section>
 

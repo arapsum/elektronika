@@ -11,10 +11,10 @@ import ProductCard, { ProductCardSkeleton } from "./card";
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts } from "@/api/products";
 import { queryClient } from "@/store";
-import type { Product } from "@/types/product.types";
+import type { CategoryAttributes, Product, ProductListResponse } from "@/types/product.types";
 
-export default function ProductGrid() {
-  const { data, isLoading, error, isError } = useQuery(
+export default function ProductGrid<T extends keyof CategoryAttributes>() {
+  const { data, isLoading, error, isError } = useQuery<ProductListResponse<T>>(
     {
       queryKey: ["products"],
       queryFn: fetchProducts,

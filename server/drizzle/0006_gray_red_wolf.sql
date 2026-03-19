@@ -1,0 +1,1 @@
+ALTER TABLE "product_variants" ALTER COLUMN "discount" SET DATA TYPE integer;

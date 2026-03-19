@@ -106,6 +106,7 @@ export const productVariantTable = pgTable(
       .references(() => productTable.id, { onDelete: "restrict" }),
     sku: varchar({ length: 255 }).notNull(),
     price: decimal().notNull(),
+    discount: integer().notNull().default(0),
     quantity: integer("stock_quantity").notNull().default(0),
     reorderThreshold: integer("reorder_threshold").notNull().default(0),
     isBase: boolean("is_default").notNull().default(false),

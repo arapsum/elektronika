@@ -1,0 +1,1 @@
+ALTER TABLE "product_variants" ADD COLUMN "discount" numeric DEFAULT '0' NOT NULL;
