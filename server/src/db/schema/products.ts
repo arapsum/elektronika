@@ -13,14 +13,20 @@ import {
 import { createId } from "@paralleldrive/cuid2";
 import { brandTable, categoryTable } from "./index.ts";
 
+export type HighlightEntry = {
+  value: string;
+  icon: string;
+  deriveFromAttribute?: string;
+};
+
 export type SpecificationEntry = {
   value: string;
-  icon?: string;
   deriveFromAttribute?: string;
-  isKeySpec?: boolean;
 };
 
 export type ProductSpecification = Record<string, Record<string, SpecificationEntry>>;
+
+export type ProductHighlight = Record<string, HighlightEntry>;
 
 export const productTable = pgTable(
   "products",
@@ -39,6 +45,7 @@ export const productTable = pgTable(
     model: varchar({ length: 255 }).notNull(),
     summary: text().notNull(),
     description: text(),
+    highlights: jsonb().$type<ProductHighlight>().default({}),
     specifications: jsonb().$type<ProductSpecification>().default({}),
     year: integer().notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),

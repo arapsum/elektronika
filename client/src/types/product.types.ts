@@ -21,6 +21,7 @@ type ProductGallery = {
 type LaptopAttributes = {
   memory: string;
   storage: string;
+  processor: string;
   colour: string;
   colourhex: string;
 };

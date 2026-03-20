@@ -22,14 +22,23 @@ export const ProductSpecificationSchema = z.record(
     }),
     z.object({
       value: z.union([z.string().trim(), z.number(), z.boolean()]).transform(String),
-      isKeySpec: z.boolean().default(false).optional(),
-      icon: z.string().optional(),
       derivedFromAttribute: z.string().optional(),
     }),
   ),
 );
 
 export type ProductSpecificationType = z.infer<typeof ProductSpecificationSchema>;
+
+export const ProductHighlightSchema = z.record(
+  z.string().trim().min(1, { message: "Highlight name cannot be empty" }),
+  z.object({
+    value: z.union([z.string().trim(), z.number(), z.boolean()]).transform(String),
+    icon: z.string().min(1, { message: "Icon cannot be empty" }),
+    derivedFromAttribute: z.string().optional(),
+  }),
+);
+
+export type ProductHighlightType = z.infer<typeof ProductHighlightSchema>;
 
 export const ProductVariantSchema = z.object({
   sku: z
@@ -101,18 +110,10 @@ export const CreateProductSchema = z.object({
     .trim()
     .min(3, { message: "Name must be at least 3 characters long" })
     .max(100, { message: "Name must be under 100 characters" }),
-  // slug: z
-  //   .string()
-  //   .trim()
-  //   .min(3, { message: "Slug must be at least 3 characters long" })
-  //   .max(100, { message: "Slug must be under 100 characters" })
-  //   .regex(/^[a-z0-9-]+$/, {
-  //     message: "Slug can only contain lowercase letters, numbers, and hyphens",
-  //   }),
   summary: z
     .string()
     .trim()
-    .min(250, { message: "Summary must be at least 250 characters long" })
+    .min(150, { message: "Summary must be at least 150 characters long" })
     .max(500, { message: "Summary must be under 500 characters" }),
   description: z
     .string()
@@ -143,6 +144,9 @@ export const CreateProductSchema = z.object({
     .max(10, { message: "Maximum 10 images allowed per variant" }),
   specifications: ProductSpecificationSchema.refine((specs) => Object.keys(specs).length > 0, {
     message: "Atleast provide one specification group",
+  }),
+  highlights: ProductHighlightSchema.refine((highlights) => Object.keys(highlights).length > 0, {
+    message: "Atleast provide one highlight",
   }),
   options: z.array(ProductVariantSchema).min(1, { message: "Atleast one option is required" }),
 });

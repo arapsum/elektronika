@@ -136,8 +136,11 @@ CREATE TABLE "products" (
 	"brand_id" text NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"model" varchar(255) NOT NULL,
+	"summary" text NOT NULL,
 	"description" text,
+	"highlights" jsonb DEFAULT '{}'::jsonb,
 	"specifications" jsonb DEFAULT '{}'::jsonb,
+	"year" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"deleted_at" timestamp
@@ -148,6 +151,7 @@ CREATE TABLE "product_variants" (
 	"product_id" varchar(255) NOT NULL,
 	"sku" varchar(255) NOT NULL,
 	"price" numeric NOT NULL,
+	"discount" integer DEFAULT 0 NOT NULL,
 	"stock_quantity" integer DEFAULT 0 NOT NULL,
 	"reorder_threshold" integer DEFAULT 0 NOT NULL,
 	"is_default" boolean DEFAULT false NOT NULL,
@@ -178,5 +182,6 @@ CREATE INDEX "attribute_values_variant_id_index" ON "attribute_values" USING btr
 CREATE INDEX "product_gallery_product_id_index" ON "product_gallery" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX "products_category_id_index" ON "products" USING btree ("category_id");--> statement-breakpoint
 CREATE INDEX "products_brand_id_index" ON "products" USING btree ("brand_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "products_name_year_index" ON "products" USING btree ("name","year");--> statement-breakpoint
 CREATE INDEX "product_variants_product_id_index" ON "product_variants" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX "product_variants_sku_index" ON "product_variants" USING btree ("sku");
